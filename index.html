@@ -278,6 +278,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Crimso
 .spell-cast:active{background:var(--glow)}
 .feat-row{padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.4}
 .feat-row strong{color:var(--text);font-size:11px;font-family:'Cinzel',serif;display:block}
+.pool-chip{font-family:'Cinzel',serif;font-size:14px;font-weight:700;padding:6px 14px;border-radius:var(--r);border:1px solid var(--gold2);background:var(--glow);color:var(--gold);cursor:pointer;min-height:38px;transition:all 0.12s}
+.pool-chip:active{transform:scale(0.94)}.pool-chip.used{border-color:var(--border);background:transparent;color:var(--text3);cursor:default;text-decoration:line-through}
+.stat-box.selected{border-color:var(--gold);background:rgba(200,164,74,0.18);box-shadow:0 0 0 2px var(--glow)}
+.race-tag{display:inline-block;font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.07em;padding:2px 8px;border-radius:4px;background:var(--blue2);color:#7abcde;border:1px solid rgba(61,110,140,0.35);margin-right:4px;margin-bottom:3px}
+.bg-tag{display:inline-block;font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.07em;padding:2px 8px;border-radius:4px;background:var(--amber2);color:#e0b060;border:1px solid rgba(168,110,32,0.35);margin-right:4px;margin-bottom:3px}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:2px}
 @keyframes rf{0%{opacity:0.2;transform:scale(0.82)}100%{opacity:1;transform:scale(1)}}
 .rolling{animation:rf 0.18s ease}
@@ -441,8 +446,43 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Crimso
         </select>
       </div>
       <div><span class="lbl">Nivel</span><input class="inp" type="number" id="pm-level" value="1" min="1" max="20" onchange="onLevelChange()"/></div>
-      <div><span class="lbl">Raza</span><input class="inp" id="pm-race" placeholder="Humano, Elfo…"/></div>
-      <div><span class="lbl">Trasfondo</span><input class="inp" id="pm-bg" placeholder="Soldado, Sabio…"/></div>
+      <div><span class="lbl">Raza</span>
+        <select class="sel" id="pm-race" onchange="onRaceChange()">
+          <option value="">— Elige raza —</option>
+          <option value="Humano">🧑 Humano</option>
+          <option value="Elfo (Alto)">🧝 Elfo (Alto)</option>
+          <option value="Elfo (del Bosque)">🧝 Elfo (del Bosque)</option>
+          <option value="Enano (del Colín)">⛏️ Enano (del Colín)</option>
+          <option value="Enano (de las Montañas)">⛏️ Enano (de las Montañas)</option>
+          <option value="Mediano (Piesligeros)">🧙 Mediano (Piesligeros)</option>
+          <option value="Gnomo (de las Rocas)">🔮 Gnomo (de las Rocas)</option>
+          <option value="Semielfo">🧝 Semielfo</option>
+          <option value="Semiorco">💪 Semiorco</option>
+          <option value="Tiefling">😈 Tiefling</option>
+          <option value="Dracónido">🐲 Dracónido</option>
+        </select>
+      </div>
+      <div><span class="lbl">Trasfondo</span>
+        <select class="sel" id="pm-bg" onchange="onBackgroundChange()">
+          <option value="">— Elige trasfondo —</option>
+          <option value="Acólito">⛪ Acólito</option>
+          <option value="Artesano">🔨 Artesano</option>
+          <option value="Charlatán">🎭 Charlatán</option>
+          <option value="Criminal">🗡️ Criminal</option>
+          <option value="Erudito">📚 Erudito</option>
+          <option value="Ermitaño">🏔️ Ermitaño</option>
+          <option value="Granjero">🌾 Granjero</option>
+          <option value="Guardia">🛡️ Guardia</option>
+          <option value="Guerrero">⚔️ Guerrero</option>
+          <option value="Mercader">💰 Mercader</option>
+          <option value="Noble">👑 Noble</option>
+          <option value="Peregrino">🗺️ Peregrino</option>
+          <option value="Sabio">📜 Sabio</option>
+          <option value="Saltimbanqui">🎪 Saltimbanqui</option>
+          <option value="Soldado">🪖 Soldado</option>
+          <option value="Náufrago">🌊 Náufrago</option>
+        </select>
+      </div>
       <div><span class="lbl">HP Máximo</span><input class="inp" type="number" id="pm-hp" value="10"/></div>
       <div><span class="lbl">CA</span><input class="inp" type="number" id="pm-ca" value="14"/></div>
       <div><span class="lbl">Velocidad</span><input class="inp" id="pm-speed" value="9m (30ft)"/></div>
@@ -452,6 +492,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Crimso
       <div><span class="lbl">Personalidad / Rasgos</span><input class="inp" id="pm-personality" placeholder="Breve descripción…"/></div>
     </div>
     <div class="section-hdr">Puntuaciones de habilidad</div>
+    <!-- RACE INFO -->
+    <div id="pm-race-info" style="display:none;margin-bottom:10px;padding:10px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);font-size:12px;line-height:1.6"></div>
+    <!-- BACKGROUND INFO -->
+    <div id="pm-bg-info" style="display:none;margin-bottom:10px;padding:10px 12px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);font-size:12px;line-height:1.6"></div>
+    <!-- STAT ROLLER -->
+    <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:10px 12px;margin-bottom:10px">
+      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Método 4D6 — descarta el menor</div>
+      <div id="roll-pool" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:36px">
+        <span style="color:var(--text3);font-style:italic;font-size:11px">Tirar para generar los 6 valores…</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn gold" onclick="rollStatPool()">🎲 Tirar 6 valores</button>
+        <button class="btn sm" onclick="clearStatPool()" style="color:var(--text3)">Limpiar</button>
+        <span style="font-size:10px;color:var(--text3);font-family:'Cinzel',serif;align-self:center">← Haz clic en un valor para asignarlo al stat seleccionado</span>
+      </div>
+      <div style="margin-top:8px;font-size:10px;font-family:'Cinzel',serif;color:var(--text3)" id="pool-help"></div>
+    </div>
     <div class="stats-grid" id="pm-stats"></div>
     <div class="section-hdr">Salvaciones con competencia</div>
     <div class="saves-grid" id="pm-saves"></div>
@@ -624,6 +681,277 @@ const CLASS_SPELLS={
   Hechicero:['Manos ardientes (3d6 fuego DC13)','Bola de fuego (8d6 fuego DC15)'],
   Brujo:['Llamada de Eldritch (1d10+CAR fuerza)','Hambre de Hadar (2d6/turno)'],
   Explorador:['Marca del cazador (+1d6 daño)'],
+};
+
+// ═══════════════════════════════════════════════════════════════
+// RAZAS — D&D 5.5e (2024)
+// ═══════════════════════════════════════════════════════════════
+const RACES={
+  'Humano':{
+    icon:'🧑',speed:9,
+    bonuses:{},  // humanos en 5.5e ganan un talento heroico en vez de bonos de stat
+    traits:['Versátil: gana un talento heroico de nivel 1 a elección','Idioma extra: conoce un idioma adicional'],
+    size:'Mediano',
+    desc:'Adaptables y ambiciosos. Los humanos se encuentran en todos los rincones del mundo.',
+    languages:['Común'],
+    asi:'Elige +2 a un stat y +1 a otro, o +1 a tres stats distintos',
+  },
+  'Elfo (Alto)':{
+    icon:'🧝',speed:9,
+    bonuses:{DES:2,INT:1},
+    traits:['Visión en penumbra 18m','Trance: medita 4h en vez de dormir 8h','Mente élfica: ventaja vs hechizos de encantamiento','Armas élficas: competencia con espada larga, espada corta, arco largo, arco corto','Truco de mago: conoce 1 truco de Mago'],
+    size:'Mediano',
+    desc:'Gráciles e inteligentes. Los altos elfos habitan bosques ancestrales y ciudades arcanas.',
+    languages:['Común','Élfico'],
+    asi:'+2 DES, +1 INT',
+  },
+  'Elfo (del Bosque)':{
+    icon:'🧝',speed:10.5,
+    bonuses:{DES:2,SAB:1},
+    traits:['Visión en penumbra 18m','Trance: medita 4h','Mente élfica: ventaja vs encantamiento','Armas élficas: competencia con espadas y arcos','Paso ligero: puede ocultarse en terreno natural aunque esté levemente oscurecido'],
+    size:'Mediano',
+    desc:'Ágiles y sigilosos. Los elfos del bosque son maestros del camuflaje y la supervivencia natural.',
+    languages:['Común','Élfico'],
+    asi:'+2 DES, +1 SAB',
+  },
+  'Enano (del Colín)':{
+    icon:'⛏️',speed:7.5,
+    bonuses:{CON:2,SAB:1},
+    traits:['Visión en penumbra 18m','Resistencia enana: ventaja en salvaciones vs veneno','Resistencia a daño de veneno','Competencia en herramientas (alfarería, cervecería o cantería)','Competencia: hacha de mano, hacha de batalla, martillo de guerra, martillo ligero'],
+    size:'Mediano',
+    desc:'Resistentes y tenaces. Los enanos del colín son maestros mineros y artesanos.',
+    languages:['Común','Enano'],
+    asi:'+2 CON, +1 SAB',
+  },
+  'Enano (de las Montañas)':{
+    icon:'⛏️',speed:7.5,
+    bonuses:{CON:2,FUE:2},
+    traits:['Visión en penumbra 18m','Resistencia enana: ventaja vs veneno','Resistencia a veneno','Entrenamiento: competencia en armadura ligera y media'],
+    size:'Mediano',
+    desc:'Fornidos y guerreros. Los enanos de las montañas son combatientes formidables.',
+    languages:['Común','Enano'],
+    asi:'+2 CON, +2 FUE',
+  },
+  'Mediano (Piesligeros)':{
+    icon:'🧙',speed:7.5,
+    bonuses:{DES:2,CAR:1},
+    traits:['Suerte: cuando sacas un 1 en un ataque/chequeo/salvación, puedes volver a tirar','Valiente: ventaja en salvaciones vs miedo','Agilidad mediana: puede ocupar el espacio de criatura más grande','Naturalalmente sigiloso: puede intentar ocultarse tras criatura más grande'],
+    size:'Pequeño',
+    desc:'Ágiles y afortunados. Los piesligeros son los más aventureros de los medianos.',
+    languages:['Común','Mediano'],
+    asi:'+2 DES, +1 CAR',
+  },
+  'Gnomo (de las Rocas)':{
+    icon:'🔮',speed:7.5,
+    bonuses:{INT:2,CON:1},
+    traits:['Visión en penumbra 18m','Astucia gnómica: ventaja en salvaciones INT/SAB/CAR vs magia','Conocimiento de máquinas: competencia en herramientas de artesano y conocimiento de artefactos'],
+    size:'Pequeño',
+    desc:'Curiosos e ingeniosos. Los gnomos de las rocas son inventores y exploradores natos.',
+    languages:['Común','Gnomo'],
+    asi:'+2 INT, +1 CON',
+  },
+  'Semielfo':{
+    icon:'🧝',speed:9,
+    bonuses:{CAR:2},
+    traits:['Visión en penumbra 18m','Ascendencia feérica: ventaja vs encantamiento, inmune a magia que induzca sueño','Versatilidad: competencia en 2 habilidades a elección','Idiomas adicionales: conoce élfico y un idioma extra'],
+    size:'Mediano',
+    desc:'Carisma natural y adaptabilidad. Los semis elfos heredan lo mejor de ambas razas.',
+    languages:['Común','Élfico'],
+    asi:'+2 CAR, +1 a dos stats a elección',
+  },
+  'Semiorco':{
+    icon:'💪',speed:9,
+    bonuses:{FUE:2,CON:1},
+    traits:['Visión en penumbra 18m','Resistencia implacable: cuando cae a 0HP, en vez queda a 1HP (1/descanso largo)','Ataques salvajes: cuando sacas crítico con arma cuerpo a cuerpo, añade 1 dado de daño extra'],
+    size:'Mediano',
+    desc:'Fuertes y resistentes. Los semiorcos son guerreros formidables con voluntad inquebrantable.',
+    languages:['Común','Orco'],
+    asi:'+2 FUE, +1 CON',
+  },
+  'Tiefling':{
+    icon:'😈',speed:9,
+    bonuses:{INT:1,CAR:2},
+    traits:['Visión en penumbra 18m','Resistencia infernal: resistencia a daño de fuego','Legado infernal: conoce el truco Taumaturgia; Nv3: Represalia infernal 1/DL; Nv5: Oscuridad 1/DL'],
+    size:'Mediano',
+    desc:'Marcados por el Averno. Los tieflings cargan con el estigma de su herencia infernal.',
+    languages:['Común','Infernal'],
+    asi:'+2 CAR, +1 INT',
+  },
+  'Dracónido':{
+    icon:'🐲',speed:9,
+    bonuses:{FUE:2,CAR:1},
+    traits:['Ascendencia dracónica: elige tipo de daño (fuego, frío, ácido, relámpago, veneno)','Aliento: 2d6 daño del tipo elegido, DC8+CON+PB (1/descanso corto)','Resistencia: al tipo de daño de tu ascendencia'],
+    size:'Mediano',
+    desc:'Orgullosos y poderosos. Los dracónidos llevan en su sangre la magia de los dragones.',
+    languages:['Común','Dracónico'],
+    asi:'+2 FUE, +1 CAR',
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// TRASFONDOS — D&D 5.5e (2024)
+// ═══════════════════════════════════════════════════════════════
+const BACKGROUNDS={
+  'Acólito':{
+    icon:'⛪',
+    skills:['Intuición','Religión'],
+    tools:[],
+    languages:2,
+    equipment:'Símbolo sagrado, libro de oraciones, 5 velas, manto, bloque de incienso, 15po',
+    feature:'Refugio de los fieles: puede recibir alojamiento y ayuda en templos de tu fe',
+    trait:'Dedicado a una deidad. Busca difundir su doctrina.',
+    asi:'+2 SAB, +1 INT o CAR',
+  },
+  'Artesano':{
+    icon:'🔨',
+    skills:['Historia','Persuasión'],
+    tools:['Herramientas de artesano (a elección)'],
+    languages:1,
+    equipment:'Herramientas de artesano, carta de presentación del gremio, ropa de viaje, 15po',
+    feature:'Membresía en gremio: el gremio ofrece alojamiento y recursos básicos',
+    trait:'Orgulloso de su oficio. Le da valor a la calidad y el trabajo bien hecho.',
+    asi:'+2 INT, +1 FUE o CAR',
+  },
+  'Charlatán':{
+    icon:'🎭',
+    skills:['Engaño','Juego de manos'],
+    tools:['Kit de disfraz','Herramientas de falsificación'],
+    languages:0,
+    equipment:'Kit de disfraz, herramientas de falsificación, ropa fina, 15po',
+    feature:'Identidad falsa: tiene preparada una segunda identidad completa y creíble',
+    trait:'Maestro del engaño. Siempre tiene un plan y una salida.',
+    asi:'+2 CAR, +1 DES o INT',
+  },
+  'Criminal':{
+    icon:'🗡️',
+    skills:['Engaño','Sigilo'],
+    tools:['Herramientas de ladrón','Juego de dados'],
+    languages:0,
+    equipment:'Palanca, ropa oscura con capucha, 15po',
+    feature:'Contacto criminal: conoce un contacto en el mundo criminal que puede conseguir información',
+    trait:'Pragmático. Los fines justifican los medios.',
+    asi:'+2 DES, +1 INT o CAR',
+  },
+  'Erudito':{
+    icon:'📚',
+    skills:['Arcanos','Historia'],
+    tools:[],
+    languages:2,
+    equipment:'Botella de tinta, pluma, cuchillo pequeño, cartas de un mentor, 10po',
+    feature:'Investigador: sabe dónde encontrar información y tiene acceso a archivos y bibliotecas',
+    trait:'Curioso e intelectual. Busca conocimiento ante todo.',
+    asi:'+2 INT, +1 SAB o CAR',
+  },
+  'Ermitaño':{
+    icon:'🏔️',
+    skills:['Medicina','Religión'],
+    tools:['Kit de herbolario'],
+    languages:1,
+    equipment:'Kit de herbolario, ropa de viaje, diario de viaje, 5po',
+    feature:'Descubrimiento: durante el retiro obtuvo una verdad única sobre el cosmos',
+    trait:'Contemplativo y reservado. Prefiere la soledad al bullicio.',
+    asi:'+2 SAB, +1 CON o INT',
+  },
+  'Granjero':{
+    icon:'🌾',
+    skills:['Athletics','Trato con animales'],
+    tools:['Herramientas de granjero'],
+    languages:0,
+    equipment:'Herramientas de granjero, ropa de viaje, 10po',
+    feature:'Vida rural: siempre encuentra alojamiento y comida en granjas o aldeas pequeñas',
+    trait:'Trabajador y honesto. La tierra lo enseñó a ser paciente y resistente.',
+    asi:'+2 FUE, +1 CON o SAB',
+  },
+  'Guardia':{
+    icon:'🛡️',
+    skills:['Athletics','Percepción'],
+    tools:['Juego de mesa (a elección)'],
+    languages:1,
+    equipment:'Insignia de guardia, esposas, linterna con aceite, ropa de viaje, 10po',
+    feature:'Posición de autoridad: civiles y guardias suelen obedecer sus órdenes',
+    trait:'Disciplinado y vigilante. Cree en el orden y la ley.',
+    asi:'+2 FUE, +1 INT o SAB',
+  },
+  'Guerrero':{
+    icon:'⚔️',
+    skills:['Athletics','Intimidación'],
+    tools:['Vehículo terrestre','Juego de mesa (a elección)'],
+    languages:0,
+    equipment:'Insignia de rango, carta de un superior, ropa de viaje, 10po',
+    feature:'Rango militar: tiene rango reconocido y puede acceder a equipo y alojamiento militar',
+    trait:'Disciplinado. Respeta la cadena de mando y el honor del campo de batalla.',
+    asi:'+2 FUE, +1 CON o DES',
+  },
+  'Mercader':{
+    icon:'💰',
+    skills:['Perspicacia','Persuasión'],
+    tools:['Herramientas de navegante (o un idioma extra)'],
+    languages:1,
+    equipment:'Mula con calesas, carta de crédito por 100po, ropa fina, 15po',
+    feature:'Ruta comercial: conoce las mejores rutas y tiene contactos en mercados',
+    trait:'Calculador y diplomático. Todo tiene un precio.',
+    asi:'+2 CAR, +1 DES o INT',
+  },
+  'Noble':{
+    icon:'👑',
+    skills:['Historia','Persuasión'],
+    tools:['Juego de mesa (a elección)'],
+    languages:1,
+    equipment:'Ropa fina, anillo de sello, pergamino de pedigrí, 25po',
+    feature:'Privilegio de posición: la gente asume que eres importante; acceso a altos círculos',
+    trait:'Acostumbrado al poder. Espera que lo traten con respeto.',
+    asi:'+2 CAR, +1 INT o SAB',
+  },
+  'Peregrino':{
+    icon:'🗺️',
+    skills:['Athletics','Supervivencia'],
+    tools:['Instrumento musical (a elección)'],
+    languages:0,
+    equipment:'Bastón, mapa de la región, diario de viaje, 10po',
+    feature:'Viajero infatigable: siempre recuerda el camino por donde pasó; difícil perderlo',
+    trait:'Curioso y errante. Cada horizonte esconde algo nuevo.',
+    asi:'+2 CON, +1 FUE o SAB',
+  },
+  'Sabio':{
+    icon:'📜',
+    skills:['Arcanos','Historia'],
+    tools:[],
+    languages:2,
+    equipment:'Botella de tinta, pluma, cuchillo pequeño, notas de investigación, 10po',
+    feature:'Investigador: cuando no sabe algo, sabe dónde y cómo encontrarlo',
+    trait:'Meticuloso y analítico. El conocimiento es poder.',
+    asi:'+2 INT, +1 SAB o CAR',
+  },
+  'Saltimbanqui':{
+    icon:'🎪',
+    skills:['Acrobacia','Actuación'],
+    tools:['Kit de disfraz','Instrumento musical (a elección)'],
+    languages:0,
+    equipment:'Kit de malabarista, disfraz, 15po',
+    feature:'Por popular demanda: siempre puede encontrar trabajo en tabernas, posadas o circos',
+    trait:'Carismático y llamativo. La vida es un espectáculo.',
+    asi:'+2 CAR, +1 DES o CON',
+  },
+  'Soldado':{
+    icon:'🪖',
+    skills:['Athletics','Intimidación'],
+    tools:['Vehículo terrestre','Juego de azar (a elección)'],
+    languages:0,
+    equipment:'Insignia de rango, trofeo de batalla, dados de hueso, ropa de viaje, 10po',
+    feature:'Rango militar: soldados reconocen su autoridad y le dan acceso a campamentos',
+    trait:'Directo y leal. La camaradería de batalla lo define.',
+    asi:'+2 FUE, +1 CON o DES',
+  },
+  'Náufrago':{
+    icon:'🌊',
+    skills:['Athletics','Supervivencia'],
+    tools:['Herramientas de navegante'],
+    languages:0,
+    equipment:'Cuchillo, mapa del mar, 10po',
+    feature:'Conocimiento del mar: puede navegar sin instrumentos y predice el clima marítimo',
+    trait:'Curtido por la adversidad. Sobrevivir es suficiente motivación.',
+    asi:'+2 CON, +1 FUE o SAB',
+  },
 };
 
 // STATE
@@ -812,7 +1140,7 @@ function rollMonsterAtk(idx){
 // PLAYER SHEET
 function statMod(score){return Math.floor((score-10)/2);}
 function profBonus(level){return Math.ceil(level/4)+1;}
-function buildStatInputs(){document.getElementById('pm-stats').innerHTML=STAT_NAMES.map(s=>`<div class="stat-box"><div class="stat-name">${s}</div><input type="number" class="stat-score" id="pm-stat-${s}" value="10" min="1" max="30" oninput="updateStatMod('${s}')"/><div class="stat-mod" id="pm-mod-${s}">+0</div></div>`).join('');}
+function buildStatInputs(){document.getElementById('pm-stats').innerHTML=STAT_NAMES.map(s=>`<div class="stat-box" onclick="selectStatForPool('${s}')" title="Clic para seleccionar y asignar un valor del pool" style="cursor:pointer"><div class="stat-name">${s}</div><input type="number" class="stat-score" id="pm-stat-${s}" value="10" min="1" max="30" oninput="updateStatMod('${s}');updateAllSaveMods()" onclick="event.stopPropagation();selectStatForPool('${s}')"/><div class="stat-mod" id="pm-mod-${s}">+0</div></div>`).join('');}
 function updateStatMod(s){const v=parseInt(document.getElementById(`pm-stat-${s}`).value)||10;document.getElementById(`pm-mod-${s}`).textContent=(statMod(v)>=0?'+':'')+statMod(v);}
 function buildSaveInputs(){const cls=document.getElementById('pm-class').value;const sp=CLASS_SAVES[cls]||[];document.getElementById('pm-saves').innerHTML=STAT_NAMES.map(s=>`<div class="save-row"><input type="checkbox" class="save-chk" id="pm-save-${s}" ${sp.includes(s)?'checked':''} oninput="updateAllSaveMods()"/><span class="save-lbl">${s}</span><span class="save-mod" id="pm-save-mod-${s}">—</span></div>`).join('');updateAllSaveMods();}
 function updateAllSaveMods(){const lvl=parseInt(document.getElementById('pm-level').value)||1;const pb=profBonus(lvl);STAT_NAMES.forEach(s=>{const score=parseInt(document.getElementById(`pm-stat-${s}`)?.value)||10;const mod=statMod(score);const prof=document.getElementById(`pm-save-${s}`)?.checked;const total=mod+(prof?pb:0);const el=document.getElementById(`pm-save-mod-${s}`);if(el)el.textContent=(total>=0?'+':'')+total;});}
@@ -825,18 +1153,151 @@ function addSpell(){const name=document.getElementById('pm-spell-new-name').valu
 function onClassChange(){buildSaveInputs();buildFeaturesPanel();playerSpells=[];buildSpellsPanel();}
 function onLevelChange(){const lvl=parseInt(document.getElementById('pm-level').value)||1;const cls=document.getElementById('pm-class').value;const hd=CLASS_HIT_DICE[cls]||8;document.getElementById('pm-hp').value=hd+Math.floor((lvl-1)*(hd/2+1));document.getElementById('pm-prof').value=profBonus(lvl);buildSpellsPanel();updateAllSaveMods();}
 
+// ── RACE ────────────────────────────────────────────────────────
+function onRaceChange(){
+  const key=document.getElementById('pm-race').value;
+  const el=document.getElementById('pm-race-info');
+  if(!key||!RACES[key]){el.style.display='none';return;}
+  const r=RACES[key];
+  const bonusStr=Object.entries(r.bonuses).length?Object.entries(r.bonuses).map(([s,v])=>`<span class="race-tag">+${v} ${s}</span>`).join(''):`<span class="race-tag">${r.asi}</span>`;
+  el.style.display='block';
+  el.innerHTML=`<strong style="font-family:'Cinzel',serif;color:var(--gold);font-size:12px">${r.icon} ${key}</strong>
+    <div style="color:var(--text3);font-style:italic;margin:3px 0 6px">${r.desc}</div>
+    <div style="margin-bottom:5px"><strong style="font-size:10px;font-family:'Cinzel',serif;color:var(--text3)">BONOS:</strong> ${bonusStr} · Vel ${r.speed}m · ${r.size}</div>
+    <div><strong style="font-size:10px;font-family:'Cinzel',serif;color:var(--text3)">RASGOS:</strong> ${r.traits.map(t=>`<span style="display:block;color:var(--text2);padding:1px 0">• ${t}</span>`).join('')}</div>
+    <div style="margin-top:5px;font-size:10px;color:var(--text3)">Idiomas: ${r.languages.join(', ')}</div>`;
+  // Apply stat bonuses to inputs
+  if(Object.keys(r.bonuses).length){
+    STAT_NAMES.forEach(s=>{
+      const el=document.getElementById('pm-stat-'+s);
+      if(!el)return;
+      const base=parseInt(el.dataset.base||el.value)||10;
+      el.dataset.base=base;
+      const bonus=r.bonuses[s]||0;
+      el.value=Math.min(30,base+bonus);
+      updateStatMod(s);
+    });
+    updateAllSaveMods();
+  }
+  // Apply speed and languages
+  document.getElementById('pm-speed').value=r.speed+'m ('+Math.round(r.speed*3.28)+'ft)';
+  const langEl=document.getElementById('pm-langs');
+  if(langEl&&r.languages.length)langEl.value=r.languages.join(', ');
+}
+
+// ── BACKGROUND ──────────────────────────────────────────────────
+function onBackgroundChange(){
+  const key=document.getElementById('pm-bg').value;
+  const el=document.getElementById('pm-bg-info');
+  if(!key||!BACKGROUNDS[key]){el.style.display='none';return;}
+  const b=BACKGROUNDS[key];
+  el.style.display='block';
+  el.innerHTML=`<strong style="font-family:'Cinzel',serif;color:var(--gold);font-size:12px">${b.icon} ${key}</strong>
+    <div style="color:var(--text3);font-style:italic;margin:3px 0 6px">${b.trait}</div>
+    <div style="margin-bottom:4px"><strong style="font-size:10px;font-family:'Cinzel',serif;color:var(--text3)">COMPETENCIAS:</strong> ${b.skills.map(s=>`<span class="bg-tag">${s}</span>`).join('')}${b.tools.length?b.tools.map(t=>`<span class="bg-tag">🔧 ${t}</span>`).join(''):''}${b.languages?`<span class="bg-tag">🗣 +${b.languages} idioma${b.languages>1?'s':''}</span>`:''}</div>
+    <div style="margin-bottom:4px"><strong style="font-size:10px;font-family:'Cinzel',serif;color:var(--text3)">RASGO:</strong> <span style="color:var(--text2)">${b.feature}</span></div>
+    <div style="margin-bottom:4px"><strong style="font-size:10px;font-family:'Cinzel',serif;color:var(--text3)">EQUIPO:</strong> <span style="color:var(--text3);font-size:11px">${b.equipment}</span></div>
+    <div style="font-size:10px;color:var(--amber)">ASI: ${b.asi}</div>`;
+  // Auto-check skill proficiencies from background
+  b.skills.forEach(sk=>{const inp=document.getElementById('pm-skill-'+sk);if(inp)inp.checked=true;});
+}
+
+// ── STAT ROLLER ─────────────────────────────────────────────────
+let statPool=[];       // [{value, used}]
+let selectedStatKey=null;
+
+function rollStatPool(){
+  statPool=[];
+  for(let i=0;i<6;i++){
+    const rolls=[1,2,3,4].map(()=>Math.floor(Math.random()*6)+1);
+    rolls.sort((a,b)=>a-b);
+    const val=rolls.slice(1).reduce((a,b)=>a+b,0);
+    statPool.push({value:val,rolls,used:false});
+  }
+  statPool.sort((a,b)=>b.value-a.value);
+  renderStatPool();
+  // Reset base values so bonuses can re-apply
+  STAT_NAMES.forEach(s=>{const el=document.getElementById('pm-stat-'+s);if(el){el.dataset.base=10;el.value=10;updateStatMod(s);}});
+  updateAllSaveMods();
+  document.getElementById('pool-help').textContent='Haz clic en un stat (arriba) para seleccionarlo, luego toca un valor del pool para asignarlo.';
+}
+
+function clearStatPool(){
+  statPool=[];selectedStatKey=null;
+  renderStatPool();
+  STAT_NAMES.forEach(s=>{const el=document.getElementById('pm-stat-'+s);if(el){el.dataset.base=10;el.value=10;updateStatMod(s);}});
+  updateAllSaveMods();
+  document.getElementById('pool-help').textContent='';
+  document.querySelectorAll('.stat-box').forEach(b=>b.classList.remove('selected'));
+}
+
+function renderStatPool(){
+  const el=document.getElementById('roll-pool');
+  if(!statPool.length){el.innerHTML='<span style="color:var(--text3);font-style:italic;font-size:11px">Tirar para generar los 6 valores…</span>';return;}
+  el.innerHTML=statPool.map((p,i)=>`<button class="pool-chip ${p.used?'used':''}" onclick="assignPoolToStat(${i})" ${p.used?'disabled':''}>${p.value}<span style="font-size:9px;color:${p.used?'var(--text3)':'var(--text3)'};display:block;font-weight:400">(${p.rolls.join(',')})</span></button>`).join('');
+}
+
+function selectStatForPool(statKey){
+  selectedStatKey=statKey;
+  document.querySelectorAll('.stat-box').forEach(b=>b.classList.remove('selected'));
+  // find the stat box by looking for the input id
+  const inp=document.getElementById('pm-stat-'+statKey);
+  if(inp)inp.closest('.stat-box')?.classList.add('selected');
+  document.getElementById('pool-help').textContent=`${statKey} seleccionado — toca un valor del pool para asignarlo.`;
+}
+
+function assignPoolToStat(poolIdx){
+  if(statPool[poolIdx].used)return;
+  if(!selectedStatKey){
+    document.getElementById('pool-help').textContent='⬆ Primero selecciona un stat tocándolo arriba.';
+    return;
+  }
+  statPool[poolIdx].used=true;
+  const val=statPool[poolIdx].value;
+  const inp=document.getElementById('pm-stat-'+selectedStatKey);
+  if(inp){
+    // Strip previous race bonus before assigning
+    const race=document.getElementById('pm-race').value;
+    const raceBonus=(race&&RACES[race])?RACES[race].bonuses[selectedStatKey]||0:0;
+    inp.dataset.base=val;
+    inp.value=Math.min(30,val+raceBonus);
+    updateStatMod(selectedStatKey);
+    updateAllSaveMods();
+  }
+  // auto-update HP if CON changed
+  if(selectedStatKey==='CON')recalcHpFromClass();
+  selectedStatKey=null;
+  document.querySelectorAll('.stat-box').forEach(b=>b.classList.remove('selected'));
+  renderStatPool();
+  const remaining=statPool.filter(p=>!p.used).length;
+  document.getElementById('pool-help').textContent=remaining>0?`${remaining} valor${remaining>1?'es':''} restante${remaining>1?'s':''} — selecciona otro stat.`:'¡Todos los stats asignados!';
+}
+
+function recalcHpFromClass(){
+  const cls=document.getElementById('pm-class').value;
+  const lvl=parseInt(document.getElementById('pm-level').value)||1;
+  const hd=CLASS_HIT_DICE[cls]||8;
+  const conMod=statMod(parseInt(document.getElementById('pm-stat-CON')?.value)||10);
+  document.getElementById('pm-hp').value=Math.max(1,hd+conMod+Math.floor((lvl-1)*(hd/2+1+conMod)));
+}
+
 function openAddPlayer(){
-  editingPlayerIdx=null;playerSpells=[];
+  editingPlayerIdx=null;playerSpells=[];statPool=[];selectedStatKey=null;
   document.getElementById('pm-title').textContent='Nuevo jugador';
-  ['pm-name','pm-race','pm-bg','pm-langs','pm-personality','pm-gear'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['pm-name','pm-langs','pm-personality','pm-gear'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('pm-class').value='Guerrero';
+  document.getElementById('pm-race').value='';
+  document.getElementById('pm-bg').value='';
   document.getElementById('pm-level').value=1;document.getElementById('pm-hp').value=10;document.getElementById('pm-ca').value=14;
   document.getElementById('pm-speed').value='9m (30ft)';document.getElementById('pm-prof').value=2;document.getElementById('pm-init-mod').value=0;
   document.getElementById('pm-langs').value='Común';
+  document.getElementById('pm-race-info').style.display='none';
+  document.getElementById('pm-bg-info').style.display='none';
   ['pm-w1-name','pm-w2-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('pm-w1-dd').value='1d8';document.getElementById('pm-w1-dm').value=0;document.getElementById('pm-w1-dt').value='cortante';document.getElementById('pm-w1-atk').value=4;
   document.getElementById('pm-w2-dd').value='1d6';document.getElementById('pm-w2-dm').value=0;document.getElementById('pm-w2-dt').value='perforante';document.getElementById('pm-w2-atk').value=4;
-  buildStatInputs();buildSaveInputs();buildSkillInputs();buildFeaturesPanel();buildSpellsPanel();
+  buildStatInputs();buildSaveInputs();buildSkillInputs();buildFeaturesPanel();buildSpellsPanel();renderStatPool();
+  document.getElementById('pm-pool-help')&&(document.getElementById('pm-pool-help').textContent='');
   document.getElementById('player-modal').classList.remove('hidden');
 }
 function openEditPlayer(idx){
