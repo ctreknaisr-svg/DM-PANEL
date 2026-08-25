@@ -1471,13 +1471,42 @@ if(saved){try{const s=JSON.parse(saved);if(s.version===2&&applyState(s)){addLog(
 else{renderAll();addLog('system','DM Panel D&D 5.5e — Bestiario completo listo');}
 renderHist();
 
-// ── PWA SERVICE WORKER ───────────────────────────────────────
-if('serviceWorker' in navigator){
+// ── PWA: REGISTRO + DETECCIÓN AUTOMÁTICA DE ACTUALIZACIONES ──
+if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('SW registrado — modo offline activo'))
-      .catch(e => console.warn('SW error:', e));
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateBanner(newSW);
+          }
+        });
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update();
+      });
+    }).catch(e => console.warn('SW error:', e));
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) { refreshing = true; window.location.reload(); }
+    });
   });
+}
+
+function showUpdateBanner(newSW) {
+  if (document.getElementById('update-banner')) return;
+  const b = document.createElement('div');
+  b.id = 'update-banner';
+  b.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--bg3);border:2px solid var(--gold2);border-radius:var(--rlg);padding:12px 18px;z-index:500;box-shadow:0 8px 28px rgba(0,0,0,0.6);display:flex;align-items:center;gap:12px;font-family:Cinzel,serif;font-size:12px;color:var(--gold);white-space:nowrap;max-width:92%';
+  b.innerHTML = '<span>✨ Hay una actualización disponible</span><button onclick="applyUpdate()" style="padding:6px 14px;background:var(--gold2);border:none;border-radius:6px;color:var(--bg);font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">Actualizar</button><button onclick="this.parentElement.remove()" style="padding:4px 8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);font-family:Cinzel,serif;font-size:10px;cursor:pointer;flex-shrink:0">Luego</button>';
+  document.body.appendChild(b);
+  window._pendingSW = newSW;
+}
+
+function applyUpdate() {
+  if (window._pendingSW) window._pendingSW.postMessage('skipWaiting');
+  else window.location.reload();
 }
 
 </script>
