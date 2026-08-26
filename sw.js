@@ -1,5 +1,5 @@
 // VERSION — cambia este número cada vez que actualices el panel
-const VERSION = '20260824';
+const VERSION = '20260826124617';
 const CACHE = 'dm-panel-' + VERSION;
 
 // Archivos a cachear para modo offline
