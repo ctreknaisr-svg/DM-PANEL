@@ -281,6 +281,40 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .spell-cast:active{background:var(--glow)}
 .feat-row{padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.4}
 .feat-row strong{color:var(--text);font-size:11px;font-family:'Cinzel',serif;display:block}
+
+/* ── DM LOGIN SCREEN ─────────────────────────────────────────── */
+.dm-login{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0}
+.dm-login.hidden{display:none}
+.dm-login-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rlg);padding:36px 32px;width:100%;max-width:420px;text-align:center}
+.dm-login-title{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--gold);letter-spacing:0.1em;margin-bottom:6px}
+.dm-login-sub{font-size:13px;color:var(--text3);margin-bottom:28px;font-style:italic}
+.dm-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;max-height:240px;overflow-y:auto}
+.dm-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);cursor:pointer;transition:all 0.12s}
+.dm-item:active,.dm-item:hover{border-color:var(--gold2);background:var(--glow)}
+.dm-item-avatar{width:36px;height:36px;border-radius:50%;background:var(--glow);border:1px solid var(--gold2);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
+.dm-item-name{font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--text);flex:1;text-align:left}
+.dm-item-meta{font-size:10px;color:var(--text3);text-align:right}
+.dm-new{display:flex;gap:8px;margin-top:4px}
+.dm-divider{font-size:10px;font-family:'Cinzel',serif;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;margin:16px 0 14px;position:relative}
+.dm-divider::before,.dm-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+.dm-divider::before{left:0}.dm-divider::after{right:0}
+
+/* ── CAMPAIGN MANAGER ────────────────────────────────────────── */
+.camp-modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:150;display:flex;align-items:center;justify-content:center;padding:14px}
+.camp-modal.hidden{display:none}
+.camp-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rlg);padding:22px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto}
+.camp-item{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);margin-bottom:7px;cursor:pointer}
+.camp-item:hover,.camp-item:active{border-color:var(--gold2);background:var(--glow)}
+.camp-item.active-camp{border-color:var(--gold);background:var(--glow)}
+.camp-icon{font-size:20px;flex-shrink:0}
+.camp-name{font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--text);flex:1}
+.camp-meta{font-size:10px;color:var(--text3);text-align:right;line-height:1.5}
+.camp-del{padding:4px 8px;background:transparent;border:1px solid var(--red);border-radius:4px;color:var(--rbr);font-size:10px;cursor:pointer;flex-shrink:0}
+.camp-del:active{background:var(--red2)}
+.topbar-dm{display:flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg3);cursor:pointer;flex-shrink:0;min-height:34px}
+.topbar-dm:active{background:var(--bg4)}
+.topbar-dm-name{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar-camp{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pool-chip{font-family:'Cinzel',serif;font-size:14px;font-weight:700;padding:6px 14px;border-radius:var(--r);border:1px solid var(--gold2);background:var(--glow);color:var(--gold);cursor:pointer;min-height:38px;transition:all 0.12s}
 .pool-chip:active{transform:scale(0.94)}.pool-chip.used{border-color:var(--border);background:transparent;color:var(--text3);cursor:default;text-decoration:line-through}
 .stat-box.selected{border-color:var(--gold);background:rgba(200,164,74,0.18);box-shadow:0 0 0 2px var(--glow)}
@@ -307,7 +341,13 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 <!-- TOPBAR -->
 <div class="top">
   <span style="font-size:15px;color:var(--gold2);flex-shrink:0">🪄</span>
-  <span class="top-title" id="camp-title">DM Panel — D&amp;D 5.5e</span>
+  <button class="topbar-dm" id="topbar-dm-btn" onclick="openCampModal()" title="Campañas y DM">
+    <span style="font-size:14px">⚔️</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-start;min-width:0">
+      <span class="topbar-camp">Sin campaña</span>
+      <span class="topbar-dm-name">👤 —</span>
+    </div>
+  </button>
   <div class="rbox">
     <span class="rlbl">Ronda</span>
     <button class="rbtn" onclick="chgR(-1)">−</button>
@@ -1467,21 +1507,244 @@ function importPartida(ev){const f=ev.target.files[0];if(!f)return;const r=new F
 function showToast(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--gold2);border-radius:8px;padding:7px 16px;font-family:Cinzel,serif;font-size:11px;color:var(--gold);z-index:400;pointer-events:none';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2400);}
 setInterval(()=>{try{localStorage.setItem(SAVE_KEY,JSON.stringify(buildSave()));}catch(e){}},30000);
 
-// INIT
-initBeastTags();renderBeasts();
-const saved=localStorage.getItem(SAVE_KEY);
-if(saved){try{const s=JSON.parse(saved);if(s.version===2&&applyState(s)){addLog('system','📂 Partida anterior restaurada');}}catch(e){renderAll();addLog('system','DM Panel D&D 5.5e listo');}}
-else{renderAll();addLog('system','DM Panel D&D 5.5e — Bestiario completo listo');}
-renderHist();
 
 // ── ACTUALIZACIONES AUTOMÁTICAS — sin service worker ────────────
-// Desregistra cualquier SW previo para evitar caché
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => r.unregister());
-  });
+  navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(r => r.unregister()); });
+}
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DM & CAMPAIGN SYSTEM
+// ═══════════════════════════════════════════════════════════════
+const DM_KEY   = 'dm-panel-dms';
+const SESS_KEY = 'dm-panel-session';
+let currentDM = null;
+let currentCampaign = null;
+
+function getAllDMs(){try{return JSON.parse(localStorage.getItem(DM_KEY)||'[]');}catch{return[];}}
+function saveDMs(dms){localStorage.setItem(DM_KEY,JSON.stringify(dms));}
+function getCampaignKey(dmId,campId){return`dm-${dmId}-camp-${campId}`;}
+function getDMCampaigns(dmId){
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(`dm-${dmId}-camp-`))keys.push(k);}
+  return keys.map(k=>{try{const d=JSON.parse(localStorage.getItem(k));return{key:k,id:k.replace(`dm-${dmId}-camp-`,''),...d};}catch{return null;}}).filter(Boolean)
+    .sort((a,b)=>new Date(b.savedAt||0)-new Date(a.savedAt||0));
 }
 
+function renderDMLogin(){
+  const dms=getAllDMs();
+  const el=document.getElementById('dm-list');
+  if(!dms.length){el.innerHTML='<div style="color:var(--text3);font-style:italic;font-size:12px;padding:8px 0">Aún no hay DMs. Crea el primero abajo.</div>';return;}
+  el.innerHTML=dms.map(dm=>{
+    const camps=getDMCampaigns(dm.id);
+    const ini=dm.name.slice(0,2).toUpperCase();
+    return`<div class="dm-item" onclick="loginDM('${dm.id}')">
+      <div class="dm-item-avatar">${ini}</div>
+      <div class="dm-item-name">${dm.name}</div>
+      <div class="dm-item-meta">${camps.length} campaña${camps.length!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function createDM(){
+  const name=document.getElementById('dm-new-name').value.trim();
+  const err=document.getElementById('dm-new-error');
+  if(!name){err.textContent='Escribe un nombre';return;}
+  const dms=getAllDMs();
+  if(dms.find(d=>d.name.toLowerCase()===name.toLowerCase())){err.textContent='Ese nombre ya existe';return;}
+  const dm={id:'dm-'+Date.now(),name};
+  dms.push(dm);saveDMs(dms);
+  document.getElementById('dm-new-name').value='';
+  err.textContent='';
+  loginDM(dm.id);
+}
+
+function loginDM(dmId){
+  const dms=getAllDMs();
+  currentDM=dms.find(d=>d.id===dmId);
+  if(!currentDM)return;
+  const camps=getDMCampaigns(dmId);
+  if(camps.length){loadCampaign(camps[0].id);}
+  else{createFirstCampaign();}
+}
+
+function createFirstCampaign(){
+  const id='camp-'+Date.now();
+  const camp={id,name:'Mi primera campaña',icon:'⚔️',createdAt:new Date().toISOString()};
+  const emptyState={...camp,version:2,savedAt:new Date().toISOString(),round:1,curTurn:0,combatants:[],players:[],logEntries:[],rollHist:[],damageDealt:{},combatActive:false,notes:''};
+  localStorage.setItem(getCampaignKey(currentDM.id,id),JSON.stringify(emptyState));
+  currentCampaign=camp;enterPanel();
+}
+
+function loadCampaign(campId){
+  const key=getCampaignKey(currentDM.id,campId);
+  const raw=localStorage.getItem(key);
+  if(!raw){currentCampaign={id:campId,name:'Campaña',icon:'⚔️'};enterPanel();return;}
+  try{
+    const data=JSON.parse(raw);
+    currentCampaign={id:campId,name:data.name||'Campaña',icon:data.icon||'⚔️'};
+    applyState(data);enterPanel();
+  }catch(e){currentCampaign={id:campId,name:'Campaña',icon:'⚔️'};enterPanel();}
+}
+
+function enterPanel(){
+  localStorage.setItem(SESS_KEY,JSON.stringify({dmId:currentDM.id,campId:currentCampaign?.id}));
+  document.getElementById('dm-login').classList.add('hidden');
+  updateTopbarDM();renderAll();
+  addLog('system',`👤 <strong>${currentDM.name}</strong> · 📜 <strong>${currentCampaign?.name||''}</strong>`);
+  startAutosave();
+}
+
+function updateTopbarDM(){
+  const el=document.getElementById('topbar-dm-btn');
+  if(!el)return;
+  el.innerHTML=`<span style="font-size:14px">${currentCampaign?.icon||'⚔️'}</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-start;min-width:0">
+      <span class="topbar-camp">${currentCampaign?.name||'Sin campaña'}</span>
+      <span class="topbar-dm-name">👤 ${currentDM?.name||''}</span>
+    </div>`;
+}
+
+function openCampModal(){
+  renderCampList();
+  document.getElementById('camp-dm-label').textContent=`DM: ${currentDM?.name||''}`;
+  document.getElementById('camp-modal').classList.remove('hidden');
+}
+function closeCampModal(){document.getElementById('camp-modal').classList.add('hidden');}
+
+function renderCampList(){
+  const el=document.getElementById('camp-list');
+  const camps=getDMCampaigns(currentDM.id);
+  if(!camps.length){el.innerHTML='<div style="color:var(--text3);font-style:italic;font-size:12px;padding:8px 0">No hay campañas aún</div>';return;}
+  el.innerHTML=camps.map(c=>{
+    const isActive=currentCampaign&&c.id===currentCampaign.id;
+    const playerCount=(c.players||[]).length;
+    const d=c.savedAt?new Date(c.savedAt).toLocaleDateString('es-CL'):'';
+    return`<div class="camp-item ${isActive?'active-camp':''}">
+      <span class="camp-icon">${c.icon||'⚔️'}</span>
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="switchCampaign('${c.id}')">
+        <div class="camp-name">${c.name}</div>
+        <div class="camp-meta">${playerCount} jugador${playerCount!==1?'es':''} · ${d}</div>
+      </div>
+      ${isActive?'<span style="font-size:10px;font-family:Cinzel,serif;color:var(--gold);flex-shrink:0">✓ Activa</span>':`<button class="camp-del" onclick="deleteCampaign('${c.id}',event)">🗑</button>`}
+    </div>`;
+  }).join('');
+}
+
+function switchCampaign(campId){
+  if(currentCampaign&&campId===currentCampaign.id){closeCampModal();return;}
+  saveCampaignNow();
+  round=1;curTurn=0;combatants=[];players=[];logEntries=[];rollHist=[];
+  damageDealt={};combatActive=false;activeMonster=null;
+  document.getElementById('notes-ta').value='';
+  document.getElementById('rnum').textContent=1;
+  document.getElementById('qc-rnd').textContent='Ronda 1';
+  loadCampaign(campId);closeCampModal();
+}
+
+function createCampaign(){
+  const name=document.getElementById('camp-new-name').value.trim();
+  if(!name){showToast('Escribe un nombre para la campaña');return;}
+  const icon=document.getElementById('camp-new-icon').value;
+  const id='camp-'+Date.now();
+  const emptyState={id,name,icon,createdAt:new Date().toISOString(),version:2,savedAt:new Date().toISOString(),round:1,curTurn:0,combatants:[],players:[],logEntries:[],rollHist:[],damageDealt:{},combatActive:false,notes:''};
+  localStorage.setItem(getCampaignKey(currentDM.id,id),JSON.stringify(emptyState));
+  document.getElementById('camp-new-name').value='';
+  switchCampaign(id);
+}
+
+function deleteCampaign(campId,ev){
+  ev.stopPropagation();
+  const camps=getDMCampaigns(currentDM.id);
+  const camp=camps.find(c=>c.id===campId);
+  if(!confirm(`¿Eliminar "${camp?.name}"? Esto borra todos sus datos permanentemente.`))return;
+  localStorage.removeItem(getCampaignKey(currentDM.id,campId));
+  renderCampList();showToast('Campaña eliminada');
+}
+
+function logoutDM(){
+  saveCampaignNow();
+  currentDM=null;currentCampaign=null;
+  localStorage.removeItem(SESS_KEY);
+  document.getElementById('dm-login').classList.remove('hidden');
+  closeCampModal();renderDMLogin();
+}
+
+function saveCampaignNow(){
+  if(!currentDM||!currentCampaign)return;
+  const state=buildSave();
+  const data={...currentCampaign,...state,savedAt:new Date().toISOString()};
+  localStorage.setItem(getCampaignKey(currentDM.id,currentCampaign.id),JSON.stringify(data));
+}
+
+let _autosaveTimer=null;
+function startAutosave(){
+  if(_autosaveTimer)clearInterval(_autosaveTimer);
+  _autosaveTimer=setInterval(()=>{try{saveCampaignNow();}catch(e){}},30000);
+}
+
+function savePartida(){saveCampaignNow();showToast(`💾 "${currentCampaign?.name||'Campaña'}" guardada`);}
+
+// BOOT — check for existing session
+(function boot(){
+  initBeastTags();renderBeasts();renderHist();
+  renderDMLogin();
+  const sess=JSON.parse(localStorage.getItem(SESS_KEY)||'{}');
+  if(sess.dmId){
+    const dms=getAllDMs();
+    const dm=dms.find(d=>d.id===sess.dmId);
+    if(dm){currentDM=dm;loadCampaign(sess.campId);}
+    else{document.getElementById('dm-login').classList.remove('hidden');}
+  }
+})();
 </script>
+
+<!-- DM LOGIN SCREEN -->
+<div class="dm-login" id="dm-login">
+  <div class="dm-login-box">
+    <div style="font-size:40px;margin-bottom:10px">🪄</div>
+    <div class="dm-login-title">DM Panel — D&amp;D 5.5e</div>
+    <div class="dm-login-sub">¿Quién dirige hoy?</div>
+    <div class="dm-list" id="dm-list"></div>
+    <div class="dm-divider">nuevo DM</div>
+    <div class="dm-new">
+      <input class="inp" id="dm-new-name" placeholder="Tu nombre de DM…" maxlength="30" style="flex:1" onkeydown="if(event.key==='Enter')createDM()"/>
+      <button class="btn gold" onclick="createDM()">Crear</button>
+    </div>
+    <div id="dm-new-error" style="color:var(--rbr);font-size:11px;margin-top:6px;font-family:Cinzel,serif"></div>
+  </div>
+</div>
+
+<!-- CAMPAIGN MANAGER MODAL -->
+<div class="camp-modal hidden" id="camp-modal">
+  <div class="camp-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="mtitle" style="margin:0">📜 Campañas</div>
+      <button class="btn sm" onclick="closeCampModal()">✕ Cerrar</button>
+    </div>
+    <div id="camp-list"></div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:8px">
+      <span class="lbl" style="margin-top:0">Nueva campaña</span>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input class="inp" id="camp-new-name" placeholder="Nombre de la campaña…" maxlength="40" style="flex:1"/>
+        <select class="sel" id="camp-new-icon" style="width:64px;text-align:center">
+          <option>⚔️</option><option>🐉</option><option>🗺️</option><option>☠️</option>
+          <option>🌑</option><option>🔮</option><option>🏰</option><option>🧙</option>
+        </select>
+        <button class="btn gold" onclick="createCampaign()">Crear</button>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--text3);font-family:Cinzel,serif" id="camp-dm-label"></span>
+      <button class="btn sm red" onclick="logoutDM()">Cambiar DM</button>
+    </div>
+  </div>
+</div>
+
+
+
 </body>
 </html>
+
