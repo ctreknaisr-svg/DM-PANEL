@@ -1508,9 +1508,38 @@ function showToast(msg){const t=document.createElement('div');t.style.cssText='p
 setInterval(()=>{try{localStorage.setItem(SAVE_KEY,JSON.stringify(buildSave()));}catch(e){}},30000);
 
 
-// ── ACTUALIZACIONES AUTOMÁTICAS — sin service worker ────────────
+// ── DETECCIÓN DE ACTUALIZACIONES ─────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(regs => { regs.forEach(r => r.unregister()); });
+}
+(function checkVersion(){
+  const cur=document.querySelector('meta[name="build-version"]')?.content||'0';
+  const stored=localStorage.getItem('dm-bv');
+  if(stored&&stored!==cur&&cur!=='0'){
+    localStorage.setItem('dm-bv',cur);
+    if('caches' in window){caches.keys().then(ks=>Promise.all(ks.map(k=>caches.delete(k)))).then(()=>location.reload(true));}
+    else location.reload(true);
+    return;
+  }
+  localStorage.setItem('dm-bv',cur);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState!=='visible')return;
+    fetch(location.pathname+'?nc='+Date.now(),{cache:'no-store'})
+      .then(r=>r.text()).then(html=>{
+        const m=html.match(/name="build-version" content="([^"]+)"/);
+        const remote=m?m[1]:'0';
+        if(remote!=='0'&&remote!==localStorage.getItem('dm-bv'))showUpdateBanner(remote);
+      }).catch(()=>{});
+  });
+})();
+function showUpdateBanner(v){
+  if(document.getElementById('upd-banner'))return;
+  const b=document.createElement('div');b.id='upd-banner';
+  b.style.cssText='position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--bg3);border:2px solid var(--gold2);border-radius:var(--rlg);padding:12px 18px;z-index:500;box-shadow:0 8px 28px rgba(0,0,0,0.6);display:flex;align-items:center;gap:12px;font-family:Cinzel,serif;font-size:12px;color:var(--gold);max-width:92%';
+  b.innerHTML='<span>✨ Hay una actualización disponible</span>'
+    +'<button onclick="localStorage.setItem(\'dm-bv\',\''+v+'\');location.reload(true)" style="padding:6px 14px;background:var(--gold2);border:none;border-radius:6px;color:var(--bg);font-family:Cinzel,serif;font-size:11px;font-weight:700;cursor:pointer">Actualizar</button>'
+    +'<button onclick="this.parentElement.remove()" style="padding:4px 8px;background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);font-family:Cinzel,serif;font-size:10px;cursor:pointer">Luego</button>';
+  document.body.appendChild(b);
 }
 </script>
 
