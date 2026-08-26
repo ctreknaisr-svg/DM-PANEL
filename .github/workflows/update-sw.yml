@@ -3,7 +3,7 @@ name: Auto-actualizar versión del Service Worker
 on:
   push:
     paths:
-      - 'index.html'  # Solo se activa cuando cambia index.html
+      - 'index.html'
 
 jobs:
   update-sw-version:
@@ -15,16 +15,26 @@ jobs:
       - name: Descargar repositorio
         uses: actions/checkout@v4
 
-      - name: Actualizar versión en sw.js
+      - name: Inyectar versión en index.html y sw.js
         run: |
           VERSION=$(date +%Y%m%d%H%M%S)
+          echo "Versión: $VERSION"
+          
+          # Actualizar sw.js
           sed -i "s/const VERSION = '[^']*'/const VERSION = '$VERSION'/" sw.js
-          echo "Nueva versión: $VERSION"
+          
+          # Inyectar meta refresh con version en index.html
+          # Reemplaza el marcador de versión si existe, o agrega uno nuevo
+          if grep -q 'data-build-version' index.html; then
+            sed -i "s/data-build-version=\"[^\"]*\"/data-build-version=\"$VERSION\"/" index.html
+          else
+            sed -i "s|<meta charset=\"UTF-8\"/>|<meta charset=\"UTF-8\"/>\n<meta name=\"build-version\" content=\"$VERSION\" data-build-version=\"$VERSION\"/>|" index.html
+          fi
 
-      - name: Confirmar cambio en el repo
+      - name: Confirmar cambios
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add sw.js
-          git diff --staged --quiet || git commit -m "chore: auto-actualizar SW versión $(date +%Y%m%d%H%M%S)"
+          git add sw.js index.html
+          git diff --staged --quiet || git commit -m "build: versión $(date +%Y%m%d%H%M%S)"
           git push
