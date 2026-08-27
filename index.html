@@ -411,6 +411,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   <button class="tbtn gold" onclick="openQC()">⚔ Combate rápido</button>
   <button class="tbtn" onclick="openAddPlayer()">+ Jugador</button>
   <button class="tbtn" onclick="savePartida()">💾 Guardar</button>
+  <button class="tbtn gold" onclick="openHistorias()">📜 Historias</button>
   <button class="tbtn" onclick="exportPartida()">⬇ Exportar</button>
   <button class="tbtn" onclick="document.getElementById('import-inp').click()">⬆ Importar</button>
   <input type="file" id="import-inp" accept=".json" style="display:none" onchange="importPartida(event)"/>
@@ -470,8 +471,16 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
     <div class="tabs" id="beast-tabs">
       <button class="tab active" onclick="switchTab('btab-list',this,'beast-tabs')">📖 Bestiario</button>
       <button class="tab" onclick="switchTab('btab-active',this,'beast-tabs')">👾 Activo</button>
+      <button class="tab" onclick="openHistorias()" style="margin-left:auto;color:var(--gold)">📜 Crear en Historias ↗</button>
     </div>
     <div class="tab-panel active" id="tab-btab-list">
+      <div id="pending-enc-banner" style="display:none;margin-bottom:8px;padding:8px 10px;border:1px solid var(--border3);border-radius:var(--r);background:var(--glow)">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);margin-bottom:5px" id="pending-enc-text"></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn sm gold" onclick="loadPendingEncounter()" style="flex:1">⚔ Cargar al combate</button>
+          <button class="btn sm" onclick="dismissPendingEncounter()">✕</button>
+        </div>
+      </div>
       <input class="beast-search" id="bsearch" placeholder="Buscar criatura…" oninput="filterBeasts()" autocomplete="off"/>
       <div class="filter-row" id="beast-tags"></div>
       <div id="beast-list"></div>
@@ -1105,13 +1114,16 @@ function rollDice(dd,dm){const[dc,ds]=dd&&dd.includes('d')?dd.split('d').map(Num
 function rollDiceCrit(dd,dm){const[dc,ds]=dd&&dd.includes('d')?dd.split('d').map(Number):[1,6];let d=0,rolls=[];for(let i=0;i<dc*2;i++){const x=Math.floor(Math.random()*ds)+1;rolls.push(x);d+=x;}return{total:d+(dm||0),rolls,raw:d};}
 
 // BESTIARY
-function initBeastTags(){const types=[...new Set(BESTIARY.map(b=>b.type))];document.getElementById('beast-tags').innerHTML=`<button class="ftag sel" onclick="setType('',this)">Todos</button>`+types.map(t=>`<button class="ftag" onclick="setType('${t}',this)">${TYPE_LABELS[t]||t}</button>`).join('');}
+// Bestiario custom creado en la plataforma de Historias (misma origin → mismo localStorage)
+function getCustomBestiary(){if(!currentDM)return[];try{return JSON.parse(localStorage.getItem(`dm-${currentDM.id}-custom-bestiary`)||'[]');}catch{return[];}}
+function fullBestiary(){return[...BESTIARY,...getCustomBestiary()];}
+function initBeastTags(){const types=[...new Set(fullBestiary().map(b=>b.type))];document.getElementById('beast-tags').innerHTML=`<button class="ftag sel" onclick="setType('',this)">Todos</button>`+types.map(t=>`<button class="ftag" onclick="setType('${t}',this)">${TYPE_LABELS[t]||t}</button>`).join('');}
 function setType(t,btn){bType=t;document.querySelectorAll('.ftag').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');renderBeasts();}
 function filterBeasts(){bFilter=document.getElementById('bsearch').value.toLowerCase();renderBeasts();}
 function sortCR(a,b){return CR_ORDER.indexOf(a.cr)-CR_ORDER.indexOf(b.cr);}
 function renderBeasts(){
   const el=document.getElementById('beast-list');
-  const f=BESTIARY.filter(b=>(!bType||b.type===bType)&&(!bFilter||b.name.toLowerCase().includes(bFilter)||b.desc.toLowerCase().includes(bFilter))).sort(sortCR);
+  const f=fullBestiary().filter(b=>(!bType||b.type===bType)&&(!bFilter||b.name.toLowerCase().includes(bFilter)||b.desc.toLowerCase().includes(bFilter))).sort(sortCR);
   if(!f.length){el.innerHTML='<div style="color:var(--text3);font-style:italic;font-size:12px;text-align:center;padding:18px">Sin resultados</div>';return;}
   el.innerHTML=f.map(b=>{const isOpen=expanded===b.id;return`<div class="bcard ${isOpen?'open':''}" onclick="toggleBeast('${b.id}')">
     <div class="bcard-top"><span class="bicon">${b.icon}</span><span class="bname">${b.name}</span><span class="btype bt-${b.type}">${TYPE_LABELS[b.type]||b.type}</span><span class="bcr">CR ${b.cr}</span></div>
@@ -1143,7 +1155,7 @@ function toggleBeast(id){expanded=expanded===id?null:id;renderBeasts();}
 
 // ACTIVE MONSTER
 function addBeastToCombat(id){
-  const b=BESTIARY.find(x=>x.id===id);if(!b)return;
+  const b=fullBestiary().find(x=>x.id===id);if(!b)return;
   const qty=Math.max(1,parseInt(document.getElementById('qty-'+id)?.value)||1);
   const existing=combatants.filter(c=>c.beastId===id).length;
   for(let n=0;n<qty;n++){
@@ -1155,8 +1167,45 @@ function addBeastToCombat(id){
   addLog('monster',qty>1?`<strong>${qty}× ${b.name}</strong> entran — ${b.hp}HP, CA${b.ca}`:`<strong>${b.name}</strong> entra — ${b.hp}HP, CA${b.ca}`);
   setActiveMonster(id,combatants.filter(c=>c.beastId===id).slice(-1)[0]?.name);
 }
+
+function openHistorias(){
+  const dm=currentDM?.id||'',camp=currentCampaign?.id||'';
+  window.open(`historias/index.html?dm=${encodeURIComponent(dm)}&camp=${encodeURIComponent(camp)}`,'_blank');
+}
+// ENCUENTRO PREPARADO (armado en la plataforma de Historias, se carga acá)
+function checkPendingEncounter(){
+  const pe=currentCampaign?.pendingEncounter;
+  const banner=document.getElementById('pending-enc-banner');
+  if(!banner)return;
+  if(!pe||!pe.length){banner.style.display='none';return;}
+  const total=pe.reduce((s,e)=>s+(e.qty||1),0);
+  document.getElementById('pending-enc-text').textContent=`🎒 Encuentro preparado: ${total} criatura${total!==1?'s':''} (${pe.map(e=>e.name).join(', ')})`;
+  banner.style.display='block';
+}
+function loadPendingEncounter(){
+  const pe=currentCampaign?.pendingEncounter;if(!pe||!pe.length)return;
+  const beasts=fullBestiary();
+  pe.forEach(e=>{
+    const b=beasts.find(x=>x.id===e.beastId);if(!b)return;
+    const existing=combatants.filter(c=>c.beastId===e.beastId).length;
+    for(let n=0;n<(e.qty||1);n++){
+      const cnt=existing+n;
+      const name=cnt>0?`${b.name} ${cnt+1}`:b.name;
+      combatants.push({id:Date.now()+n+Math.random(),type:'monster',beastId:e.beastId,name,hp:b.hp,maxHp:b.hp,ca:b.ca,dexMod:b.dex,initiative:null,conditions:[]});
+    }
+  });
+  combatActive=true;renderInitList();renderCombatList();renderQC();
+  addLog('monster',`🎒 Encuentro preparado cargado — ${pe.map(e=>`${e.qty||1}× ${e.name}`).join(', ')}`);
+  dismissPendingEncounter();
+  showPanel('combat',document.querySelector('.nbtn[onclick*="combat"]'));
+}
+function dismissPendingEncounter(){
+  if(currentCampaign)currentCampaign.pendingEncounter=null;
+  saveCampaignNow();
+  const banner=document.getElementById('pending-enc-banner');if(banner)banner.style.display='none';
+}
 function setActiveMonster(id,customName){
-  const b=BESTIARY.find(x=>x.id===id);if(!b)return;
+  const b=fullBestiary().find(x=>x.id===id);if(!b)return;
   const inC=combatants.find(c=>c.beastId===id);
   activeMonster={...b,currentHp:inC?inC.hp:b.hp,combatantId:inC?.id,displayName:customName||b.name};
   renderActiveMonster();
@@ -1900,9 +1949,12 @@ function loadCampaign(campId){
   }
   try{
     const data=JSON.parse(raw);
-    currentCampaign={id:campId,name:data.name||'Campaña',icon:data.icon||'⚔️'};
+    // story y pendingEncounter los escribe la plataforma de Historias (mismo origin/localStorage);
+    // se guardan acá para que el autosave de abajo no los pise.
+    currentCampaign={id:campId,name:data.name||'Campaña',icon:data.icon||'⚔️',story:data.story,pendingEncounter:data.pendingEncounter};
     applyState(data);
     enterPanel();
+    checkPendingEncounter();
   }catch(e){
     console.error('loadCampaign error:',e);
     currentCampaign={id:campId,name:'Campaña',icon:'⚔️'};
@@ -1911,14 +1963,15 @@ function loadCampaign(campId){
 }
 
 function enterPanel(){
+  const ebtn=document.getElementById('emergency-btn');
   if(!currentDM||!currentCampaign){
-    // Estado inválido — mostrar botón de emergencia en topbar
-    document.getElementById('emergency-btn').style.display='flex';
+    // Estado inválido — mostrar botón de emergencia en topbar (si existe)
+    if(ebtn)ebtn.style.display='flex';
     return;
   }
   localStorage.setItem(SESS_KEY,JSON.stringify({dmId:currentDM.id,campId:currentCampaign.id}));
   document.getElementById('dm-login').classList.remove('visible');
-  document.getElementById('emergency-btn').style.display='none';
+  if(ebtn)ebtn.style.display='none';
   updateTopbarDM();renderAll();
   addLog('system',`👤 <strong>${currentDM.name}</strong> · 📜 <strong>${currentCampaign.name}</strong>`);
   startAutosave();
