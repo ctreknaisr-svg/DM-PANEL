@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="build-version" content="20260827132556" data-build-version="20260827132556"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -1808,20 +1807,48 @@ function savePartida(){saveCampaignNow();showToast(`💾 "${currentCampaign?.nam
 // ── BOOT ──────────────────────────────────────────────────────
 (function boot(){
   initBeastTags();renderBeasts();renderHist();
-  const sess=JSON.parse(localStorage.getItem(SESS_KEY)||'{}');
-  if(sess.dmId){
+
+  function showLogin(){
+    renderDMLogin();
+    document.getElementById('dm-login').classList.add('visible');
+  }
+
+  try{
+    const sess=JSON.parse(localStorage.getItem(SESS_KEY)||'{}');
+    if(!sess.dmId||!sess.campId){showLogin();return;}
+
     const dms=getAllDMs();
     const dm=dms.find(d=>d.id===sess.dmId);
-    if(dm&&sess.campId){
-      // Sesión válida — entrar directo
+    if(!dm){
+      // DM no existe — limpiar sesión y mostrar login
+      localStorage.removeItem(SESS_KEY);
+      showLogin();return;
+    }
+
+    const campKey=getCampaignKey(sess.dmId,sess.campId);
+    const campRaw=localStorage.getItem(campKey);
+    if(!campRaw){
+      // Campaña no existe — ir a paso 2 (selección de campaña del DM)
+      localStorage.removeItem(SESS_KEY);
       currentDM=dm;
-      loadCampaign(sess.campId);
+      document.getElementById('step-dm').style.display='none';
+      document.getElementById('step-camp').style.display='block';
+      document.getElementById('step-camp-title').textContent='👤 '+dm.name;
+      renderCampPickList();
+      document.getElementById('dm-login').classList.add('visible');
       return;
     }
+
+    // Todo válido — entrar directo
+    currentDM=dm;
+    loadCampaign(sess.campId);
+
+  }catch(e){
+    // Cualquier error inesperado — limpiar y mostrar login
+    console.error('Boot error:',e);
+    localStorage.removeItem(SESS_KEY);
+    showLogin();
   }
-  // Sin sesión — mostrar login paso 1
-  renderDMLogin();
-  document.getElementById('dm-login').classList.add('visible');
 })();
 
 // ═══════════════════════════════════════════════════════════════
@@ -1937,6 +1964,18 @@ function changeAdminPin(){
   document.getElementById('admin-new-pin').value='';
   showToast('PIN actualizado');
 }
+
+function emergencyReset(){
+  // Solo borra la sesión activa, NO los datos
+  localStorage.removeItem(SESS_KEY);
+  currentDM=null;currentCampaign=null;
+  closeAdminModal();
+  renderDMLogin();
+  document.getElementById('step-camp').style.display='none';
+  document.getElementById('step-dm').style.display='block';
+  document.getElementById('dm-login').classList.add('visible');
+  showToast('Sesión reseteada — elige DM y campaña');
+}
 </script>
 
 <!-- ══ PANTALLA DE INICIO ══════════════════════════════════════ -->
@@ -2024,7 +2063,10 @@ function changeAdminPin(){
         <button class="btn gold full" onclick="checkAdminPin()">Entrar</button>
         <div id="admin-pin-error" style="color:var(--rbr);font-size:11px;margin-top:8px;font-family:Cinzel,serif"></div>
       </div>
-      <div class="mrow"><button class="mbtn" onclick="closeAdminModal()">Cancelar</button></div>
+      <div class="mrow">
+        <button class="mbtn" onclick="closeAdminModal()">Cancelar</button>
+        <button class="mbtn red" onclick="emergencyReset()" title="Si la app está trabada, esto limpia la sesión activa sin borrar los datos">⚠ Resetear sesión</button>
+      </div>
     </div>
     <!-- Admin panel (after auth) -->
     <div id="admin-panel" style="display:none">
