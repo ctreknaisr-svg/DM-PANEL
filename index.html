@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="build-version" content="20260827122129" data-build-version="20260827122129"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -1563,19 +1562,38 @@ function getDMCampaigns(dmId){
     .sort((a,b)=>new Date(b.savedAt||0)-new Date(a.savedAt||0));
 }
 
+// ── PANTALLA LOGIN — PASO 1: DMs ─────────────────────────────
 function renderDMLogin(){
   const dms=getAllDMs();
   const el=document.getElementById('dm-list');
-  if(!dms.length){el.innerHTML='<div style="color:var(--text3);font-style:italic;font-size:12px;padding:8px 0">Aún no hay DMs. Crea el primero abajo.</div>';return;}
+  if(!dms.length){
+    el.innerHTML='<div style="color:var(--text3);font-style:italic;font-size:12px;padding:10px 0;text-align:center">Aún no hay DMs. Crea el primero abajo.</div>';
+    return;
+  }
   el.innerHTML=dms.map(dm=>{
     const camps=getDMCampaigns(dm.id);
     const ini=dm.name.slice(0,2).toUpperCase();
-    return`<div class="dm-item" onclick="loginDM('${dm.id}')">
+    return`<div class="dm-item" onclick="selectDM('${dm.id}')">
       <div class="dm-item-avatar">${ini}</div>
-      <div class="dm-item-name">${dm.name}</div>
-      <div class="dm-item-meta">${camps.length} campaña${camps.length!==1?'s':''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="dm-item-name">${dm.name}</div>
+        <div class="dm-item-meta">${camps.length} campaña${camps.length!==1?'s':''}</div>
+      </div>
+      <button class="btn sm" style="color:var(--rbr);border-color:var(--red);flex-shrink:0;font-size:9px"
+        onclick="deleteDM('${dm.id}',event)">🗑</button>
     </div>`;
   }).join('');
+}
+
+function deleteDM(dmId,ev){
+  ev.stopPropagation();
+  const dms=getAllDMs();
+  const dm=dms.find(d=>d.id===dmId);
+  if(!confirm(`¿Eliminar al DM "${dm?.name}" y TODAS sus campañas? Esto no se puede deshacer.`))return;
+  // Delete all campaigns
+  getDMCampaigns(dmId).forEach(c=>localStorage.removeItem(getCampaignKey(dmId,c.id)));
+  saveDMs(dms.filter(d=>d.id!==dmId));
+  renderDMLogin();
 }
 
 function createDM(){
@@ -1586,26 +1604,74 @@ function createDM(){
   if(dms.find(d=>d.name.toLowerCase()===name.toLowerCase())){err.textContent='Ese nombre ya existe';return;}
   const dm={id:'dm-'+Date.now(),name};
   dms.push(dm);saveDMs(dms);
-  document.getElementById('dm-new-name').value='';
-  err.textContent='';
-  loginDM(dm.id);
+  document.getElementById('dm-new-name').value='';err.textContent='';
+  selectDM(dm.id);
 }
 
-function loginDM(dmId){
+// ── PANTALLA LOGIN — PASO 2: Campañas ────────────────────────
+function selectDM(dmId){
   const dms=getAllDMs();
-  currentDM=dms.find(d=>d.id===dmId);
-  if(!currentDM)return;
-  const camps=getDMCampaigns(dmId);
-  if(camps.length){loadCampaign(camps[0].id);}
-  else{createFirstCampaign();}
+  const dm=dms.find(d=>d.id===dmId);
+  if(!dm)return;
+  currentDM=dm;
+  // Show step 2
+  document.getElementById('step-dm').style.display='none';
+  document.getElementById('step-camp').style.display='block';
+  document.getElementById('step-camp-title').textContent='👤 '+dm.name;
+  renderCampPickList();
 }
 
-function createFirstCampaign(){
+function backToDMSelect(){
+  currentDM=null;
+  document.getElementById('step-camp').style.display='none';
+  document.getElementById('step-dm').style.display='block';
+  renderDMLogin();
+}
+
+function renderCampPickList(){
+  const el=document.getElementById('camp-pick-list');
+  const camps=getDMCampaigns(currentDM.id);
+  if(!camps.length){
+    el.innerHTML='<div style="color:var(--text3);font-style:italic;font-size:12px;padding:8px 0;text-align:center">No hay campañas aún. Crea la primera abajo.</div>';
+    return;
+  }
+  el.innerHTML=camps.map(c=>{
+    const playerCount=(c.players||[]).length;
+    const d=c.savedAt?new Date(c.savedAt).toLocaleDateString('es-CL'):'';
+    return`<div class="camp-item" style="margin-bottom:7px">
+      <span class="camp-icon">${c.icon||'⚔️'}</span>
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="loginWithCampaign('${c.id}')">
+        <div class="camp-name">${c.name}</div>
+        <div class="camp-meta">${playerCount} jugador${playerCount!==1?'es':''} · ${d}</div>
+      </div>
+      <button class="camp-del" onclick="deleteCampaignFromLogin('${c.id}',event)">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteCampaignFromLogin(campId,ev){
+  ev.stopPropagation();
+  const camps=getDMCampaigns(currentDM.id);
+  const camp=camps.find(c=>c.id===campId);
+  if(!confirm(`¿Eliminar la campaña "${camp?.name}"? Esto borra todos sus datos.`))return;
+  localStorage.removeItem(getCampaignKey(currentDM.id,campId));
+  renderCampPickList();
+  showToast('Campaña eliminada');
+}
+
+function createCampaign(){
+  const name=document.getElementById('camp-new-name').value.trim();
+  if(!name){showToast('Escribe un nombre para la campaña');return;}
+  const icon=document.getElementById('camp-new-icon').value;
   const id='camp-'+Date.now();
-  const camp={id,name:'Mi primera campaña',icon:'⚔️',createdAt:new Date().toISOString()};
-  const emptyState={...camp,version:2,savedAt:new Date().toISOString(),round:1,curTurn:0,combatants:[],players:[],logEntries:[],rollHist:[],damageDealt:{},combatActive:false,notes:''};
+  const emptyState={id,name,icon,createdAt:new Date().toISOString(),version:2,savedAt:new Date().toISOString(),round:1,curTurn:0,combatants:[],players:[],logEntries:[],rollHist:[],damageDealt:{},combatActive:false,notes:''};
   localStorage.setItem(getCampaignKey(currentDM.id,id),JSON.stringify(emptyState));
-  currentCampaign=camp;enterPanel();
+  document.getElementById('camp-new-name').value='';
+  loginWithCampaign(id);
+}
+
+function loginWithCampaign(campId){
+  loadCampaign(campId);
 }
 
 function loadCampaign(campId){
@@ -1637,6 +1703,7 @@ function updateTopbarDM(){
     </div>`;
 }
 
+// ── MODAL CAMPAÑAS (desde topbar) ────────────────────────────
 function openCampModal(){
   renderCampList();
   document.getElementById('camp-dm-label').textContent=`DM: ${currentDM?.name||''}`;
@@ -1658,7 +1725,9 @@ function renderCampList(){
         <div class="camp-name">${c.name}</div>
         <div class="camp-meta">${playerCount} jugador${playerCount!==1?'es':''} · ${d}</div>
       </div>
-      ${isActive?'<span style="font-size:10px;font-family:Cinzel,serif;color:var(--gold);flex-shrink:0">✓ Activa</span>':`<button class="camp-del" onclick="deleteCampaign('${c.id}',event)">🗑</button>`}
+      ${isActive
+        ?'<span style="font-size:10px;font-family:Cinzel,serif;color:var(--gold);flex-shrink:0">✓ Activa</span>'
+        :`<button class="camp-del" onclick="deleteCampaign('${c.id}',event)">🗑</button>`}
     </div>`;
   }).join('');
 }
@@ -1674,14 +1743,14 @@ function switchCampaign(campId){
   loadCampaign(campId);closeCampModal();
 }
 
-function createCampaign(){
-  const name=document.getElementById('camp-new-name').value.trim();
+function createCampaignFromModal(){
+  const name=document.getElementById('camp-modal-name').value.trim();
   if(!name){showToast('Escribe un nombre para la campaña');return;}
-  const icon=document.getElementById('camp-new-icon').value;
+  const icon=document.getElementById('camp-modal-icon').value;
   const id='camp-'+Date.now();
   const emptyState={id,name,icon,createdAt:new Date().toISOString(),version:2,savedAt:new Date().toISOString(),round:1,curTurn:0,combatants:[],players:[],logEntries:[],rollHist:[],damageDealt:{},combatActive:false,notes:''};
   localStorage.setItem(getCampaignKey(currentDM.id,id),JSON.stringify(emptyState));
-  document.getElementById('camp-new-name').value='';
+  document.getElementById('camp-modal-name').value='';
   switchCampaign(id);
 }
 
@@ -1695,13 +1764,16 @@ function deleteCampaign(campId,ev){
 }
 
 function logoutDM(){
-  saveCampaignNow();
-  currentDM=null;currentCampaign=null;
-  localStorage.removeItem(SESS_KEY);
+  saveCampaignNow();currentDM=null;currentCampaign=null;
+  localStorage.removeItem(SESS_KEY);closeCampModal();
+  // Reset login to step 1
+  document.getElementById('step-camp').style.display='none';
+  document.getElementById('step-dm').style.display='block';
+  renderDMLogin();
   document.getElementById('dm-login').classList.add('visible');
-  closeCampModal();renderDMLogin();
 }
 
+// ── SAVE/LOAD ─────────────────────────────────────────────────
 function saveCampaignNow(){
   if(!currentDM||!currentCampaign)return;
   const state=buildSave();
@@ -1717,43 +1789,69 @@ function startAutosave(){
 
 function savePartida(){saveCampaignNow();showToast(`💾 "${currentCampaign?.name||'Campaña'}" guardada`);}
 
-// BOOT — check for existing session
+// ── BOOT ──────────────────────────────────────────────────────
 (function boot(){
   initBeastTags();renderBeasts();renderHist();
   const sess=JSON.parse(localStorage.getItem(SESS_KEY)||'{}');
   if(sess.dmId){
     const dms=getAllDMs();
     const dm=dms.find(d=>d.id===sess.dmId);
-    if(dm){
-      // Sesión válida — entrar directo sin mostrar login
+    if(dm&&sess.campId){
+      // Sesión válida — entrar directo
       currentDM=dm;
       loadCampaign(sess.campId);
       return;
     }
   }
-  // Sin sesión válida — mostrar login
+  // Sin sesión — mostrar login paso 1
   renderDMLogin();
   document.getElementById('dm-login').classList.add('visible');
-})();
-</script>
+})();</script>
 
-<!-- DM LOGIN SCREEN -->
+<!-- ══ PANTALLA DE INICIO ══════════════════════════════════════ -->
 <div class="dm-login" id="dm-login">
   <div class="dm-login-box">
-    <div style="font-size:40px;margin-bottom:10px">🪄</div>
+    <div style="font-size:44px;margin-bottom:8px">🪄</div>
     <div class="dm-login-title">DM Panel — D&amp;D 5.5e</div>
-    <div class="dm-login-sub">¿Quién dirige hoy?</div>
-    <div class="dm-list" id="dm-list"></div>
-    <div class="dm-divider">nuevo DM</div>
-    <div class="dm-new">
-      <input class="inp" id="dm-new-name" placeholder="Tu nombre de DM…" maxlength="30" style="flex:1" onkeydown="if(event.key==='Enter')createDM()"/>
-      <button class="btn gold" onclick="createDM()">Crear</button>
+
+    <!-- PASO 1: elegir DM -->
+    <div id="step-dm">
+      <div class="dm-login-sub">¿Quién dirige hoy?</div>
+      <div class="dm-list" id="dm-list"></div>
+      <div class="dm-divider">nuevo DM</div>
+      <div class="dm-new">
+        <input class="inp" id="dm-new-name" placeholder="Tu nombre de DM…" maxlength="30"
+          style="flex:1" onkeydown="if(event.key===&#39;Enter&#39;)createDM()"/>
+        <button class="btn gold" onclick="createDM()">Crear</button>
+      </div>
+      <div id="dm-new-error" style="color:var(--rbr);font-size:11px;margin-top:6px;font-family:Cinzel,serif"></div>
     </div>
-    <div id="dm-new-error" style="color:var(--rbr);font-size:11px;margin-top:6px;font-family:Cinzel,serif"></div>
+
+    <!-- PASO 2: elegir campaña -->
+    <div id="step-camp" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <button class="btn sm" onclick="backToDMSelect()">← Atrás</button>
+        <div style="flex:1;font-family:Cinzel,serif;font-size:13px;color:var(--text2)" id="step-camp-title"></div>
+      </div>
+      <div class="dm-login-sub" style="margin-bottom:12px">Elige una campaña</div>
+      <div id="camp-pick-list"></div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
+        <div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Nueva campaña</div>
+        <div style="display:flex;gap:7px">
+          <input class="inp" id="camp-new-name" placeholder="Nombre…" maxlength="40" style="flex:1"
+            onkeydown="if(event.key===&#39;Enter&#39;)createCampaign()"/>
+          <select class="sel" id="camp-new-icon" style="width:58px;text-align:center;padding:7px 4px">
+            <option>⚔️</option><option>🐉</option><option>🗺️</option><option>☠️</option>
+            <option>🌑</option><option>🔮</option><option>🏰</option><option>🧙</option>
+          </select>
+          <button class="btn gold" onclick="createCampaign()">Crear</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- CAMPAIGN MANAGER MODAL -->
+<!-- ══ MODAL CAMPAÑAS (topbar) ═════════════════════════════════ -->
 <div class="camp-modal hidden" id="camp-modal">
   <div class="camp-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
@@ -1764,12 +1862,12 @@ function savePartida(){saveCampaignNow();showToast(`💾 "${currentCampaign?.nam
     <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:8px">
       <span class="lbl" style="margin-top:0">Nueva campaña</span>
       <div style="display:flex;gap:8px;margin-top:6px">
-        <input class="inp" id="camp-new-name" placeholder="Nombre de la campaña…" maxlength="40" style="flex:1"/>
-        <select class="sel" id="camp-new-icon" style="width:64px;text-align:center">
+        <input class="inp" id="camp-modal-name" placeholder="Nombre de la campaña…" maxlength="40" style="flex:1"/>
+        <select class="sel" id="camp-modal-icon" style="width:64px;text-align:center">
           <option>⚔️</option><option>🐉</option><option>🗺️</option><option>☠️</option>
           <option>🌑</option><option>🔮</option><option>🏰</option><option>🧙</option>
         </select>
-        <button class="btn gold" onclick="createCampaign()">Crear</button>
+        <button class="btn gold" onclick="createCampaignFromModal()">Crear</button>
       </div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center">
