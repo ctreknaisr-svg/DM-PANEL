@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="build-version" content="20260827134148" data-build-version="20260827134148"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -1562,6 +1561,112 @@ function showUpdateBanner(v){
 }
 </script>
 
+
+<!-- ══ PANTALLA DE INICIO ══════════════════════════════════════ -->
+<div class="dm-login" id="dm-login">
+  <div class="dm-login-box">
+    <div style="font-size:44px;margin-bottom:8px">🪄</div>
+    <div class="dm-login-title">DM Panel — D&amp;D 5.5e</div>
+
+    <!-- PASO 1: elegir DM -->
+    <div id="step-dm">
+      <div class="dm-login-sub">¿Quién dirige hoy?</div>
+      <div class="dm-list" id="dm-list"></div>
+      <div class="dm-divider">nuevo DM</div>
+      <div class="dm-new">
+        <input class="inp" id="dm-new-name" placeholder="Tu nombre de DM…" maxlength="30"
+          style="flex:1" onkeydown="if(event.key===&#39;Enter&#39;)createDM()"/>
+        <button class="btn gold" onclick="createDM()">Crear</button>
+      </div>
+      <div id="dm-new-error" style="color:var(--rbr);font-size:11px;margin-top:6px;font-family:Cinzel,serif"></div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
+        <button class="btn sm" onclick="openAdminLogin()" style="color:var(--text3);font-size:9px">⚙ Administrador</button>
+      </div>
+    </div>
+
+    <!-- PASO 2: elegir campaña -->
+    <div id="step-camp" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <button class="btn sm" onclick="backToDMSelect()">← Atrás</button>
+        <div style="flex:1;font-family:Cinzel,serif;font-size:13px;color:var(--text2)" id="step-camp-title"></div>
+      </div>
+      <div class="dm-login-sub" style="margin-bottom:12px">Elige una campaña</div>
+      <div id="camp-pick-list"></div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
+        <div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Nueva campaña</div>
+        <div style="display:flex;gap:7px">
+          <input class="inp" id="camp-new-name" placeholder="Nombre…" maxlength="40" style="flex:1"
+            onkeydown="if(event.key===&#39;Enter&#39;)createCampaign()"/>
+          <select class="sel" id="camp-new-icon" style="width:58px;text-align:center;padding:7px 4px">
+            <option>⚔️</option><option>🐉</option><option>🗺️</option><option>☠️</option>
+            <option>🌑</option><option>🔮</option><option>🏰</option><option>🧙</option>
+          </select>
+          <button class="btn gold" onclick="createCampaign()">Crear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CAMPAÑAS (topbar) ═════════════════════════════════ -->
+<div class="camp-modal hidden" id="camp-modal">
+  <div class="camp-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="mtitle" style="margin:0">📜 Campañas</div>
+      <button class="btn sm" onclick="closeCampModal()">✕ Cerrar</button>
+    </div>
+    <div id="camp-list"></div>
+    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:8px">
+      <span class="lbl" style="margin-top:0">Nueva campaña</span>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <input class="inp" id="camp-modal-name" placeholder="Nombre de la campaña…" maxlength="40" style="flex:1"/>
+        <select class="sel" id="camp-modal-icon" style="width:64px;text-align:center">
+          <option>⚔️</option><option>🐉</option><option>🗺️</option><option>☠️</option>
+          <option>🌑</option><option>🔮</option><option>🏰</option><option>🧙</option>
+        </select>
+        <button class="btn gold" onclick="createCampaignFromModal()">Crear</button>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--text3);font-family:Cinzel,serif" id="camp-dm-label"></span>
+      <button class="btn sm red" onclick="logoutDM()">Cambiar DM</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN MODAL ══════════════════════════════════════════════ -->
+<div class="admin-modal hidden" id="admin-modal">
+  <div class="admin-box">
+    <!-- PIN screen -->
+    <div id="admin-pin-screen">
+      <div class="admin-title">⚙ Panel de Administrador</div>
+      <div class="admin-sub">Acceso restringido — ingresa el PIN</div>
+      <div class="admin-pin-screen">
+        <input class="admin-pin-inp" type="password" id="admin-pin-inp" maxlength="6"
+          placeholder="••••" onkeydown="if(event.key==='Enter')checkAdminPin()"/>
+        <button class="btn gold full" onclick="checkAdminPin()">Entrar</button>
+        <div id="admin-pin-error" style="color:var(--rbr);font-size:11px;margin-top:8px;font-family:Cinzel,serif"></div>
+      </div>
+      <div class="mrow">
+        <button class="mbtn" onclick="closeAdminModal()">Cancelar</button>
+        <button class="mbtn red" onclick="emergencyReset()" title="Si la app está trabada, esto limpia la sesión activa sin borrar los datos">⚠ Resetear sesión</button>
+      </div>
+    </div>
+    <!-- Admin panel (after auth) -->
+    <div id="admin-panel" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="admin-title">⚙ Administrador</div>
+        <button class="btn sm" onclick="closeAdminModal()">✕ Cerrar</button>
+      </div>
+      <div class="admin-sub">Gestión completa de DMs y campañas</div>
+      <div id="admin-content"></div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="btn sm red full" onclick="adminDeleteAll()">☠ Borrar TODOS los datos</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════════
 // DM & CAMPAIGN SYSTEM
@@ -1583,8 +1688,9 @@ function getDMCampaigns(dmId){
 
 // ── PANTALLA LOGIN — PASO 1: DMs ─────────────────────────────
 function renderDMLogin(){
-  const dms=getAllDMs();
   const el=document.getElementById('dm-list');
+  if(!el){console.warn('dm-list not in DOM yet');return;}
+  const dms=getAllDMs();
   if(!dms.length){
     el.innerHTML='<div style="color:var(--text3);font-style:italic;font-size:12px;padding:10px 0;text-align:center">Aún no hay DMs. Crea el primero abajo.</div>';
     return;
@@ -2004,112 +2110,5 @@ function emergencyReset(){
 }
 </script>
 
-<!-- ══ PANTALLA DE INICIO ══════════════════════════════════════ -->
-<div class="dm-login" id="dm-login">
-  <div class="dm-login-box">
-    <div style="font-size:44px;margin-bottom:8px">🪄</div>
-    <div class="dm-login-title">DM Panel — D&amp;D 5.5e</div>
-
-    <!-- PASO 1: elegir DM -->
-    <div id="step-dm">
-      <div class="dm-login-sub">¿Quién dirige hoy?</div>
-      <div class="dm-list" id="dm-list"></div>
-      <div class="dm-divider">nuevo DM</div>
-      <div class="dm-new">
-        <input class="inp" id="dm-new-name" placeholder="Tu nombre de DM…" maxlength="30"
-          style="flex:1" onkeydown="if(event.key===&#39;Enter&#39;)createDM()"/>
-        <button class="btn gold" onclick="createDM()">Crear</button>
-      </div>
-      <div id="dm-new-error" style="color:var(--rbr);font-size:11px;margin-top:6px;font-family:Cinzel,serif"></div>
-      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
-        <button class="btn sm" onclick="openAdminLogin()" style="color:var(--text3);font-size:9px">⚙ Administrador</button>
-      </div>
-    </div>
-
-    <!-- PASO 2: elegir campaña -->
-    <div id="step-camp" style="display:none">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <button class="btn sm" onclick="backToDMSelect()">← Atrás</button>
-        <div style="flex:1;font-family:Cinzel,serif;font-size:13px;color:var(--text2)" id="step-camp-title"></div>
-      </div>
-      <div class="dm-login-sub" style="margin-bottom:12px">Elige una campaña</div>
-      <div id="camp-pick-list"></div>
-      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
-        <div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Nueva campaña</div>
-        <div style="display:flex;gap:7px">
-          <input class="inp" id="camp-new-name" placeholder="Nombre…" maxlength="40" style="flex:1"
-            onkeydown="if(event.key===&#39;Enter&#39;)createCampaign()"/>
-          <select class="sel" id="camp-new-icon" style="width:58px;text-align:center;padding:7px 4px">
-            <option>⚔️</option><option>🐉</option><option>🗺️</option><option>☠️</option>
-            <option>🌑</option><option>🔮</option><option>🏰</option><option>🧙</option>
-          </select>
-          <button class="btn gold" onclick="createCampaign()">Crear</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL CAMPAÑAS (topbar) ═════════════════════════════════ -->
-<div class="camp-modal hidden" id="camp-modal">
-  <div class="camp-box">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div class="mtitle" style="margin:0">📜 Campañas</div>
-      <button class="btn sm" onclick="closeCampModal()">✕ Cerrar</button>
-    </div>
-    <div id="camp-list"></div>
-    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:8px">
-      <span class="lbl" style="margin-top:0">Nueva campaña</span>
-      <div style="display:flex;gap:8px;margin-top:6px">
-        <input class="inp" id="camp-modal-name" placeholder="Nombre de la campaña…" maxlength="40" style="flex:1"/>
-        <select class="sel" id="camp-modal-icon" style="width:64px;text-align:center">
-          <option>⚔️</option><option>🐉</option><option>🗺️</option><option>☠️</option>
-          <option>🌑</option><option>🔮</option><option>🏰</option><option>🧙</option>
-        </select>
-        <button class="btn gold" onclick="createCampaignFromModal()">Crear</button>
-      </div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:11px;color:var(--text3);font-family:Cinzel,serif" id="camp-dm-label"></span>
-      <button class="btn sm red" onclick="logoutDM()">Cambiar DM</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ ADMIN MODAL ══════════════════════════════════════════════ -->
-<div class="admin-modal hidden" id="admin-modal">
-  <div class="admin-box">
-    <!-- PIN screen -->
-    <div id="admin-pin-screen">
-      <div class="admin-title">⚙ Panel de Administrador</div>
-      <div class="admin-sub">Acceso restringido — ingresa el PIN</div>
-      <div class="admin-pin-screen">
-        <input class="admin-pin-inp" type="password" id="admin-pin-inp" maxlength="6"
-          placeholder="••••" onkeydown="if(event.key==='Enter')checkAdminPin()"/>
-        <button class="btn gold full" onclick="checkAdminPin()">Entrar</button>
-        <div id="admin-pin-error" style="color:var(--rbr);font-size:11px;margin-top:8px;font-family:Cinzel,serif"></div>
-      </div>
-      <div class="mrow">
-        <button class="mbtn" onclick="closeAdminModal()">Cancelar</button>
-        <button class="mbtn red" onclick="emergencyReset()" title="Si la app está trabada, esto limpia la sesión activa sin borrar los datos">⚠ Resetear sesión</button>
-      </div>
-    </div>
-    <!-- Admin panel (after auth) -->
-    <div id="admin-panel" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div class="admin-title">⚙ Administrador</div>
-        <button class="btn sm" onclick="closeAdminModal()">✕ Cerrar</button>
-      </div>
-      <div class="admin-sub">Gestión completa de DMs y campañas</div>
-      <div id="admin-content"></div>
-      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
-        <button class="btn sm red full" onclick="adminDeleteAll()">☠ Borrar TODOS los datos</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
 </body>
 </html>
-
