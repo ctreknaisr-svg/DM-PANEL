@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="build-version" content="20260827133315" data-build-version="20260827133315"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -365,6 +364,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
       <span class="topbar-dm-name">👤 —</span>
     </div>
   </button>
+  <button class="tbtn" id="emergency-btn" onclick="emergencyReset()" title="Volver a la pantalla de inicio" style="color:var(--rbr);border-color:var(--red);display:none">⚠ Salir</button>
   <div class="rbox">
     <span class="rlbl">Ronda</span>
     <button class="rbtn" onclick="chgR(-1)">−</button>
@@ -1693,19 +1693,40 @@ function loginWithCampaign(campId){
 function loadCampaign(campId){
   const key=getCampaignKey(currentDM.id,campId);
   const raw=localStorage.getItem(key);
-  if(!raw){currentCampaign={id:campId,name:'Campaña',icon:'⚔️'};enterPanel();return;}
+  if(!raw){
+    // Campaña no encontrada — volver a selección
+    currentCampaign=null;
+    localStorage.removeItem(SESS_KEY);
+    renderDMLogin();
+    currentDM=null;
+    document.getElementById('step-camp').style.display='none';
+    document.getElementById('step-dm').style.display='block';
+    document.getElementById('dm-login').classList.add('visible');
+    return;
+  }
   try{
     const data=JSON.parse(raw);
     currentCampaign={id:campId,name:data.name||'Campaña',icon:data.icon||'⚔️'};
-    applyState(data);enterPanel();
-  }catch(e){currentCampaign={id:campId,name:'Campaña',icon:'⚔️'};enterPanel();}
+    applyState(data);
+    enterPanel();
+  }catch(e){
+    console.error('loadCampaign error:',e);
+    currentCampaign={id:campId,name:'Campaña',icon:'⚔️'};
+    enterPanel();
+  }
 }
 
 function enterPanel(){
-  localStorage.setItem(SESS_KEY,JSON.stringify({dmId:currentDM.id,campId:currentCampaign?.id}));
+  if(!currentDM||!currentCampaign){
+    // Estado inválido — mostrar botón de emergencia en topbar
+    document.getElementById('emergency-btn').style.display='flex';
+    return;
+  }
+  localStorage.setItem(SESS_KEY,JSON.stringify({dmId:currentDM.id,campId:currentCampaign.id}));
   document.getElementById('dm-login').classList.remove('visible');
+  document.getElementById('emergency-btn').style.display='none';
   updateTopbarDM();renderAll();
-  addLog('system',`👤 <strong>${currentDM.name}</strong> · 📜 <strong>${currentCampaign?.name||''}</strong>`);
+  addLog('system',`👤 <strong>${currentDM.name}</strong> · 📜 <strong>${currentCampaign.name}</strong>`);
   startAutosave();
 }
 
