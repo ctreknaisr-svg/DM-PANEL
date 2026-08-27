@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="build-version" content="20260827122934" data-build-version="20260827122934"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -312,6 +311,22 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .camp-meta{font-size:10px;color:var(--text3);text-align:right;line-height:1.5}
 .camp-del{padding:4px 8px;background:transparent;border:1px solid var(--red);border-radius:4px;color:var(--rbr);font-size:10px;cursor:pointer;flex-shrink:0}
 .camp-del:active{background:var(--red2)}
+
+/* ── ADMIN PANEL ─────────────────────────────────────────────── */
+.admin-modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;display:flex;align-items:center;justify-content:center;padding:14px}
+.admin-modal.hidden{display:none}
+.admin-box{background:var(--bg3);border:1px solid var(--red);border-radius:var(--rlg);padding:22px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.admin-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--rbr);margin-bottom:4px;letter-spacing:0.08em}
+.admin-sub{font-size:11px;color:var(--text3);margin-bottom:16px;font-style:italic}
+.admin-dm-block{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:10px}
+.admin-dm-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.admin-dm-avatar{width:30px;height:30px;border-radius:50%;background:var(--red2);border:1px solid rgba(191,64,40,0.4);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--rbr);flex-shrink:0}
+.admin-dm-name{font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--text);flex:1}
+.admin-camp-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)}
+.admin-camp-row:last-child{border-bottom:none}
+.admin-pin-screen{text-align:center;padding:10px 0 16px}
+.admin-pin-inp{width:140px;text-align:center;font-family:'Cinzel',serif;font-size:24px;font-weight:700;letter-spacing:0.2em;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:10px;margin:12px auto;display:block}
+.admin-pin-inp:focus{border-color:var(--rbr);outline:none}
 .topbar-dm{display:flex;align-items:center;gap:6px;padding:3px 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg3);cursor:pointer;flex-shrink:0;min-height:34px}
 .topbar-dm:active{background:var(--bg4)}
 .topbar-dm-name{font-family:'Cinzel',serif;font-size:10px;color:var(--text2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1580,8 +1595,7 @@ function renderDMLogin(){
         <div class="dm-item-name">${dm.name}</div>
         <div class="dm-item-meta">${camps.length} campaña${camps.length!==1?'s':''}</div>
       </div>
-      <button class="btn sm" style="color:var(--rbr);border-color:var(--red);flex-shrink:0;font-size:9px"
-        onclick="deleteDM('${dm.id}',event)">🗑</button>
+
     </div>`;
   }).join('');
 }
@@ -1645,7 +1659,7 @@ function renderCampPickList(){
         <div class="camp-name">${c.name}</div>
         <div class="camp-meta">${playerCount} jugador${playerCount!==1?'es':''} · ${d}</div>
       </div>
-      <button class="camp-del" onclick="deleteCampaignFromLogin('${c.id}',event)">🗑</button>
+
     </div>`;
   }).join('');
 }
@@ -1728,7 +1742,7 @@ function renderCampList(){
       </div>
       ${isActive
         ?'<span style="font-size:10px;font-family:Cinzel,serif;color:var(--gold);flex-shrink:0">✓ Activa</span>'
-        :`<button class="camp-del" onclick="deleteCampaign('${c.id}',event)">🗑</button>`}
+        :''}
     </div>`;
   }).join('');
 }
@@ -1807,7 +1821,122 @@ function savePartida(){saveCampaignNow();showToast(`💾 "${currentCampaign?.nam
   // Sin sesión — mostrar login paso 1
   renderDMLogin();
   document.getElementById('dm-login').classList.add('visible');
-})();</script>
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN SYSTEM
+// ═══════════════════════════════════════════════════════════════
+const ADMIN_PIN_KEY = 'dm-admin-pin';
+const DEFAULT_PIN   = '1234';
+
+function getAdminPin(){return localStorage.getItem(ADMIN_PIN_KEY)||DEFAULT_PIN;}
+
+function openAdminLogin(){
+  document.getElementById('admin-pin-screen').style.display='block';
+  document.getElementById('admin-panel').style.display='none';
+  document.getElementById('admin-pin-inp').value='';
+  document.getElementById('admin-pin-error').textContent='';
+  document.getElementById('admin-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('admin-pin-inp').focus(),100);
+}
+
+function closeAdminModal(){
+  document.getElementById('admin-modal').classList.add('hidden');
+  document.getElementById('admin-pin-inp').value='';
+}
+
+function checkAdminPin(){
+  const pin=document.getElementById('admin-pin-inp').value.trim();
+  if(pin===getAdminPin()){
+    document.getElementById('admin-pin-screen').style.display='none';
+    document.getElementById('admin-panel').style.display='block';
+    renderAdminPanel();
+  } else {
+    document.getElementById('admin-pin-error').textContent='PIN incorrecto';
+    document.getElementById('admin-pin-inp').value='';
+  }
+}
+
+function renderAdminPanel(){
+  const el=document.getElementById('admin-content');
+  const dms=getAllDMs();
+  if(!dms.length){el.innerHTML='<div style="color:var(--text3);font-style:italic;font-size:12px;padding:8px 0">No hay DMs registrados.</div>';return;}
+  el.innerHTML=dms.map(dm=>{
+    const camps=getDMCampaigns(dm.id);
+    const ini=dm.name.slice(0,2).toUpperCase();
+    return`<div class="admin-dm-block">
+      <div class="admin-dm-hdr">
+        <div class="admin-dm-avatar">${ini}</div>
+        <span class="admin-dm-name">${dm.name}</span>
+        <span style="font-size:10px;color:var(--text3);font-family:Cinzel,serif">${camps.length} campaña${camps.length!==1?'s':''}</span>
+        <button class="btn sm red" onclick="adminDeleteDM('${dm.id}')" style="font-size:9px;flex-shrink:0">🗑 DM</button>
+      </div>
+      ${camps.length
+        ? camps.map(c=>`<div class="admin-camp-row">
+            <span style="font-size:14px">${c.icon||'⚔️'}</span>
+            <span style="flex:1">${c.name}</span>
+            <span style="font-size:10px;color:var(--text3);font-family:Cinzel,serif">${(c.players||[]).length} jugadores</span>
+            <button class="camp-del" onclick="adminDeleteCampaign('${dm.id}','${c.id}')">🗑</button>
+          </div>`).join('')
+        : '<div style="font-size:11px;color:var(--text3);padding:4px 0;font-style:italic">Sin campañas</div>'
+      }
+    </div>`;
+  }).join('');
+
+  // PIN change section
+  el.innerHTML+=`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+    <div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;margin-bottom:8px">Cambiar PIN de administrador</div>
+    <div style="display:flex;gap:8px">
+      <input class="inp" type="password" id="admin-new-pin" placeholder="Nuevo PIN (mín. 4 dígitos)" maxlength="8" style="flex:1"/>
+      <button class="btn" onclick="changeAdminPin()">Guardar</button>
+    </div>
+  </div>`;
+}
+
+function adminDeleteDM(dmId){
+  const dms=getAllDMs();
+  const dm=dms.find(d=>d.id===dmId);
+  if(!confirm(`¿Eliminar al DM "${dm?.name}" y TODAS sus campañas? Esta acción es permanente.`))return;
+  getDMCampaigns(dmId).forEach(c=>localStorage.removeItem(getCampaignKey(dmId,c.id)));
+  saveDMs(dms.filter(d=>d.id!==dmId));
+  // If we deleted the current DM, log out
+  if(currentDM&&currentDM.id===dmId){currentDM=null;currentCampaign=null;localStorage.removeItem(SESS_KEY);}
+  renderAdminPanel();
+  showToast(`DM "${dm?.name}" eliminado`);
+}
+
+function adminDeleteCampaign(dmId,campId){
+  const camps=getDMCampaigns(dmId);
+  const camp=camps.find(c=>c.id===campId);
+  if(!confirm(`¿Eliminar la campaña "${camp?.name}"?`))return;
+  localStorage.removeItem(getCampaignKey(dmId,campId));
+  // If deleting active campaign, clear session
+  if(currentCampaign&&currentCampaign.id===campId){currentCampaign=null;localStorage.removeItem(SESS_KEY);}
+  renderAdminPanel();
+  showToast(`Campaña "${camp?.name}" eliminada`);
+}
+
+function adminDeleteAll(){
+  if(!confirm('¿Borrar ABSOLUTAMENTE TODOS los datos? DMs, campañas, partidas. Esto no se puede deshacer.'))return;
+  if(!confirm('¿Estás seguro? Se perderá todo permanentemente.'))return;
+  const pin=getAdminPin();
+  localStorage.clear();
+  localStorage.setItem(ADMIN_PIN_KEY,pin); // keep the pin
+  currentDM=null;currentCampaign=null;
+  closeAdminModal();
+  renderDMLogin();
+  document.getElementById('dm-login').classList.add('visible');
+  showToast('Todos los datos eliminados');
+}
+
+function changeAdminPin(){
+  const pin=document.getElementById('admin-new-pin').value.trim();
+  if(pin.length<4){showToast('El PIN debe tener al menos 4 caracteres');return;}
+  localStorage.setItem(ADMIN_PIN_KEY,pin);
+  document.getElementById('admin-new-pin').value='';
+  showToast('PIN actualizado');
+}
+</script>
 
 <!-- ══ PANTALLA DE INICIO ══════════════════════════════════════ -->
 <div class="dm-login" id="dm-login">
@@ -1826,6 +1955,9 @@ function savePartida(){saveCampaignNow();showToast(`💾 "${currentCampaign?.nam
         <button class="btn gold" onclick="createDM()">Crear</button>
       </div>
       <div id="dm-new-error" style="color:var(--rbr);font-size:11px;margin-top:6px;font-family:Cinzel,serif"></div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
+        <button class="btn sm" onclick="openAdminLogin()" style="color:var(--text3);font-size:9px">⚙ Administrador</button>
+      </div>
     </div>
 
     <!-- PASO 2: elegir campaña -->
@@ -1878,6 +2010,35 @@ function savePartida(){saveCampaignNow();showToast(`💾 "${currentCampaign?.nam
   </div>
 </div>
 
+<!-- ══ ADMIN MODAL ══════════════════════════════════════════════ -->
+<div class="admin-modal hidden" id="admin-modal">
+  <div class="admin-box">
+    <!-- PIN screen -->
+    <div id="admin-pin-screen">
+      <div class="admin-title">⚙ Panel de Administrador</div>
+      <div class="admin-sub">Acceso restringido — ingresa el PIN</div>
+      <div class="admin-pin-screen">
+        <input class="admin-pin-inp" type="password" id="admin-pin-inp" maxlength="6"
+          placeholder="••••" onkeydown="if(event.key==='Enter')checkAdminPin()"/>
+        <button class="btn gold full" onclick="checkAdminPin()">Entrar</button>
+        <div id="admin-pin-error" style="color:var(--rbr);font-size:11px;margin-top:8px;font-family:Cinzel,serif"></div>
+      </div>
+      <div class="mrow"><button class="mbtn" onclick="closeAdminModal()">Cancelar</button></div>
+    </div>
+    <!-- Admin panel (after auth) -->
+    <div id="admin-panel" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="admin-title">⚙ Administrador</div>
+        <button class="btn sm" onclick="closeAdminModal()">✕ Cerrar</button>
+      </div>
+      <div class="admin-sub">Gestión completa de DMs y campañas</div>
+      <div id="admin-content"></div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="btn sm red full" onclick="adminDeleteAll()">☠ Borrar TODOS los datos</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 </body>
