@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="build-version" content="20260827140544" data-build-version="20260827140544"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -391,15 +390,15 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 <body>
 <!-- TOPBAR -->
 <div class="top">
-  <span style="font-size:15px;color:var(--gold2);flex-shrink:0">🪄</span>
-  <button class="topbar-dm" id="topbar-dm-btn" onclick="currentDM?openCampModal():emergencyReset()" title="Campañas y DM">
+  <button class="tbtn" onclick="goHome()" title="Inicio — cambiar DM o campaña"
+    style="font-size:18px;padding:4px 10px;border-color:var(--gold2);color:var(--gold);flex-shrink:0;min-width:40px">🪄</button>
+  <button class="topbar-dm" id="topbar-dm-btn" onclick="currentDM?openCampModal():goHome()" title="Campañas">
     <span style="font-size:14px">⚔️</span>
     <div style="display:flex;flex-direction:column;align-items:flex-start;min-width:0">
       <span class="topbar-camp">Sin campaña</span>
       <span class="topbar-dm-name">👤 —</span>
     </div>
   </button>
-  <button class="tbtn" id="emergency-btn" onclick="emergencyReset()" title="Volver a la pantalla de inicio" style="color:var(--rbr);border-color:var(--red);display:none">⚠ Salir</button>
   <div class="rbox">
     <span class="rlbl">Ronda</span>
     <button class="rbtn" onclick="chgR(-1)">−</button>
@@ -414,7 +413,6 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   <button class="tbtn" onclick="exportPartida()">⬇ Exportar</button>
   <button class="tbtn" onclick="document.getElementById('import-inp').click()">⬆ Importar</button>
   <input type="file" id="import-inp" accept=".json" style="display:none" onchange="importPartida(event)"/>
-  <button class="tbtn" onclick="openAdminPanel()" style="color:var(--rbr);border-color:var(--red)" title="Panel de Administrador">⚙ Admin</button>
 </div>
 <!-- APP GRID -->
 <div class="app" id="app">
@@ -1628,8 +1626,8 @@ function showUpdateBanner(v){
       <button class="btn gold" onclick="createDM()">Crear</button>
     </div>
     <div id="dm-new-error" style="color:var(--rbr);font-size:11px;margin-top:6px;font-family:Cinzel,serif"></div>
-    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);text-align:center">
-      <button class="btn sm" onclick="openAdminLogin()" style="color:var(--text3);font-size:9px">⚙ Administrador</button>
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:center">
+      <button class="btn sm" onclick="openAdminPanel()" style="color:var(--rbr);border-color:var(--red);gap:5px">⚙ Panel de Administrador</button>
     </div>
 
     <!-- Elementos ocultos necesarios para compatibilidad con el resto del código -->
@@ -1660,9 +1658,12 @@ function showUpdateBanner(v){
         <button class="btn gold" onclick="createCampaignFromModal()">Crear</button>
       </div>
     </div>
-    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+    <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:8px">
       <span style="font-size:11px;color:var(--text3);font-family:Cinzel,serif" id="camp-dm-label"></span>
-      <button class="btn sm red" onclick="logoutDM()">Cambiar DM</button>
+      <div style="display:flex;gap:7px">
+        <button class="btn sm" onclick="closeCampModal();openAdminPanel()" style="color:var(--rbr);border-color:var(--red)">⚙ Admin</button>
+        <button class="btn sm red" onclick="goHome()">⌂ Inicio</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2188,6 +2189,16 @@ function emergencyReset(){
   renderDMLogin();
   document.getElementById('dm-login').classList.add('visible');
   showToast('Sesión reseteada — elige DM y campaña');
+}
+
+function goHome(){
+  // Guarda la partida actual si hay una activa
+  if(currentDM&&currentCampaign) saveCampaignNow();
+  // Resetea sesión y vuelve al login sin borrar datos
+  localStorage.removeItem(SESS_KEY);
+  currentDM=null;currentCampaign=null;expandedDM=null;
+  renderDMLogin();
+  document.getElementById('dm-login').classList.add('visible');
 }
 
 // ── ADMIN FULLSCREEN PANEL ────────────────────────────────────
