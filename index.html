@@ -283,8 +283,8 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .feat-row strong{color:var(--text);font-size:11px;font-family:'Cinzel',serif;display:block}
 
 /* ── DM LOGIN SCREEN ─────────────────────────────────────────── */
-.dm-login{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0}
-.dm-login.hidden{display:none}
+.dm-login{position:fixed;inset:0;background:var(--bg);z-index:1000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:0}
+.dm-login.visible{display:flex}
 .dm-login-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rlg);padding:36px 32px;width:100%;max-width:420px;text-align:center}
 .dm-login-title{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--gold);letter-spacing:0.1em;margin-bottom:6px}
 .dm-login-sub{font-size:13px;color:var(--text3);margin-bottom:28px;font-style:italic}
@@ -1620,7 +1620,7 @@ function loadCampaign(campId){
 
 function enterPanel(){
   localStorage.setItem(SESS_KEY,JSON.stringify({dmId:currentDM.id,campId:currentCampaign?.id}));
-  document.getElementById('dm-login').classList.add('hidden');
+  document.getElementById('dm-login').classList.remove('visible');
   updateTopbarDM();renderAll();
   addLog('system',`👤 <strong>${currentDM.name}</strong> · 📜 <strong>${currentCampaign?.name||''}</strong>`);
   startAutosave();
@@ -1697,7 +1697,7 @@ function logoutDM(){
   saveCampaignNow();
   currentDM=null;currentCampaign=null;
   localStorage.removeItem(SESS_KEY);
-  document.getElementById('dm-login').classList.remove('hidden');
+  document.getElementById('dm-login').classList.add('visible');
   closeCampModal();renderDMLogin();
 }
 
@@ -1719,14 +1719,20 @@ function savePartida(){saveCampaignNow();showToast(`💾 "${currentCampaign?.nam
 // BOOT — check for existing session
 (function boot(){
   initBeastTags();renderBeasts();renderHist();
-  renderDMLogin();
   const sess=JSON.parse(localStorage.getItem(SESS_KEY)||'{}');
   if(sess.dmId){
     const dms=getAllDMs();
     const dm=dms.find(d=>d.id===sess.dmId);
-    if(dm){currentDM=dm;loadCampaign(sess.campId);}
-    else{document.getElementById('dm-login').classList.remove('hidden');}
+    if(dm){
+      // Sesión válida — entrar directo sin mostrar login
+      currentDM=dm;
+      loadCampaign(sess.campId);
+      return;
+    }
   }
+  // Sin sesión válida — mostrar login
+  renderDMLogin();
+  document.getElementById('dm-login').classList.add('visible');
 })();
 </script>
 
