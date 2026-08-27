@@ -1,1 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="theme-color" content="#0d0b09"/>
+<title>Historias &amp; Bestiario — D&amp;D</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0d0b09;--bg2:#141109;--bg3:#1c1710;--bg4:#231e14;--bg5:#2a2418;
+  --gold:#c8a44a;--gold2:#8a6d2e;--glow:rgba(200,164,74,0.13);
+  --red:#bf4028;--red2:rgba(191,64,40,0.22);--rbr:#df5238;
+  --green:#3d7a4e;--green2:rgba(61,122,78,0.22);--gbr:#5aad70;
+  --amber:#a86e20;--amber2:rgba(168,110,32,0.22);
+  --blue:#3d6e8c;--blue2:rgba(61,110,140,0.22);
+  --purple:#6a4e8c;--purple2:rgba(106,78,140,0.22);
+  --border:rgba(200,164,74,0.12);--border2:rgba(200,164,74,0.28);--border3:rgba(200,164,74,0.5);
+  --text:#e5d8be;--text2:#9e8a65;--text3:#5e4e32;
+  --r:7px;--rlg:12px;--touch:48px;
+}
+html,body{min-height:100%;width:100%;background:var(--bg);color:var(--text);font-family:'Crimson Pro',serif;font-size:14px}
+body{padding-bottom:24px}
+h1,h2,h3,.mono{font-family:'Cinzel',serif}
+.top{display:flex;align-items:center;gap:8px;padding:0 12px;height:52px;width:100%;background:var(--bg2);border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:30;overflow-x:auto;scrollbar-width:none}
+.top::-webkit-scrollbar{display:none}
+.top-title{font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:0.1em;color:var(--gold);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.top-sep{flex:1;min-width:8px}
+.top-ctx{font-size:11px;color:var(--text2);white-space:nowrap;display:flex;align-items:center;gap:5px}
+.tbtn{padding:6px 12px;border:1px solid var(--border2);border-radius:var(--r);background:transparent;color:var(--text2);font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.06em;cursor:pointer;white-space:nowrap;flex-shrink:0;min-height:34px}
+.tbtn:active{background:var(--bg3)}
+.tbtn.gold{color:var(--gold);border-color:var(--gold2)}.tbtn.gold:active{background:var(--glow)}
+.tbtn.red{color:var(--rbr);border-color:var(--red)}
+.wrap{max-width:920px;margin:0 auto;padding:16px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rlg);padding:14px;margin-bottom:12px}
+.lbl{font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.1em;color:var(--text3);text-transform:uppercase;display:block;margin-bottom:4px;margin-top:10px}
+.lbl:first-child{margin-top:0}
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);
+  padding:9px 10px;font-family:'Crimson Pro',serif;font-size:14px;outline:none
+}
+input:focus,textarea:focus,select:focus{border-color:var(--gold2)}
+textarea{resize:vertical;min-height:70px;line-height:1.5}
+select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);background-position:calc(100% - 16px) center,calc(100% - 11px) center;background-size:5px 5px;background-repeat:no-repeat}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1;min-width:90px}
+.btn{padding:9px 14px;border:1px solid var(--border2);border-radius:var(--r);background:transparent;color:var(--text2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.05em;cursor:pointer;min-height:38px}
+.btn:active{background:var(--bg3)}
+.btn.gold{color:var(--gold);border-color:var(--gold2)}.btn.gold:active{background:var(--glow)}
+.btn.red{color:var(--rbr);border-color:var(--red)}.btn.red:active{background:var(--red2)}
+.btn.sm{padding:6px 10px;font-size:9px;min-height:30px}
+.btn.full{width:100%}
+h1.pageh{font-size:16px;letter-spacing:0.08em;color:var(--gold);margin-bottom:2px}
+.sub{font-size:11px;color:var(--text3);margin-bottom:14px}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;position:sticky;top:52px;background:var(--bg);z-index:20;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.06em;padding:11px 16px;background:transparent;border:none;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;text-transform:uppercase}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:8px}
+.item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.item-title{font-weight:600;color:var(--text)}
+.item-meta{font-size:10px;color:var(--text3);margin-top:2px}
+.item-actions{display:flex;gap:5px;flex-shrink:0}
+.iconbtn{width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.iconbtn:active{background:var(--bg4);color:var(--gold)}
+.pill{display:inline-block;font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.05em;padding:2px 8px;border-radius:20px;text-transform:uppercase}
+.pill.plan{background:var(--blue2);color:#8fb8d4}
+.pill.curso{background:var(--amber2);color:#d4a25a}
+.pill.done{background:var(--green2);color:var(--gbr)}
+.empty{color:var(--text3);font-style:italic;font-size:12px;text-align:center;padding:18px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg4);border:1px solid var(--border3);color:var(--gold);padding:10px 18px;border-radius:20px;font-size:12px;opacity:0;transition:all .25s;pointer-events:none;z-index:100;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.bcard{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+.bcard-top{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer}
+.bicon{font-size:18px}
+.bname{flex:1;font-weight:600}
+.bcr{font-size:10px;color:var(--text3);font-family:'Cinzel',serif}
+.bbody{padding:0 12px 12px;border-top:1px solid var(--border)}
+.bdesc{font-size:12px;color:var(--text2);padding-top:10px;font-style:italic}
+.btraits{font-size:11px;color:var(--amber);margin-top:6px}
+.bimm{font-size:11px;color:var(--blue2);margin-top:4px}
+.bstats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.bst{background:var(--bg4);border-radius:6px;padding:5px;text-align:center}
+.bst-l{font-size:8px;color:var(--text3);font-family:'Cinzel',serif;letter-spacing:0.06em}
+.bst-v{font-size:13px;font-weight:700;color:var(--gold)}
+.bact{font-size:11px;color:var(--text2);padding:4px 0;border-top:1px solid var(--border)}
+.bact:first-child{border-top:none}
+.qty-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+.qty-inp{width:52px;text-align:center;padding:6px}
+.gate{max-width:420px;margin:60px auto;padding:0 16px}
+.gate .card{padding:18px}
+.dm-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;cursor:pointer;background:var(--bg3)}
+.dm-item:active{background:var(--bg4)}
+.dm-avatar{width:34px;height:34px;border-radius:50%;background:var(--gold2);color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:12px;flex-shrink:0}
+.actblk{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:10px;margin-bottom:8px}
+.actblk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cart{position:sticky;bottom:0;background:var(--bg2);border-top:1px solid var(--border3);padding:10px 14px;margin:0 -16px -16px;display:none}
+.cart.show{display:block}
+.chk-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);margin-top:8px}
+</style>
+</head>
+<body>
 
+<div class="top">
+  <a href="../index.html" class="top-title" style="text-decoration:none">🪄 <span>DM Panel</span></a>
+  <span style="color:var(--text3)">/</span>
+  <span class="top-title" style="color:var(--text)">📜 Historias &amp; Bestiario</span>
+  <div class="top-sep"></div>
+  <span class="top-ctx" id="top-ctx"></span>
+  <button class="tbtn" id="btn-switch" onclick="goToGate()" style="display:none">Cambiar</button>
+</div>
+
+<!-- GATE: elegir DM y campaña -->
+<div class="gate" id="gate">
+  <div class="card">
+    <h1 class="pageh">Elige tu campaña</h1>
+    <div class="sub">Los datos se comparten con el panel de DM (mismo origen).</div>
+    <div id="gate-dm-step">
+      <div class="lbl">DM</div>
+      <div id="dm-list"></div>
+      <div class="row" style="margin-top:8px">
+        <input type="text" id="new-dm-name" placeholder="Nombre de nuevo DM"/>
+        <button class="btn gold" onclick="createDMHere()" style="flex:0 0 auto">+ Crear</button>
+      </div>
+    </div>
+    <div id="gate-camp-step" style="display:none;margin-top:16px">
+      <div class="lbl">Campaña de <span id="gate-dm-name" style="color:var(--gold)"></span></div>
+      <div id="camp-list"></div>
+      <div class="row" style="margin-top:8px">
+        <input type="text" id="new-camp-name" placeholder="Nombre de nueva campaña"/>
+        <button class="btn gold" onclick="createCampaignHere()" style="flex:0 0 auto">+ Crear</button>
+      </div>
+      <button class="btn" style="margin-top:10px" onclick="backToDMStep()">← Elegir otro DM</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="wrap" id="app-main" style="display:none">
+  <h1 class="pageh" id="camp-title">Campaña</h1>
+  <div class="sub">Historia y bestiario personalizado — se conecta con el panel de DM para llevar las batallas.</div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('historia',this)">📖 Historia</button>
+    <button class="tab" onclick="switchTab('bestiario',this)">🐉 Bestiario</button>
+  </div>
+
+  <!-- HISTORIA -->
+  <div class="tab-panel active" id="tab-historia">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h2 style="font-size:12px;letter-spacing:0.08em;color:var(--text2);text-transform:uppercase">Sinopsis</h2>
+        <button class="btn sm gold" onclick="saveStory()">💾 Guardar historia</button>
+      </div>
+      <textarea id="story-synopsis" placeholder="De qué trata la campaña, tono, premisa inicial…" style="min-height:100px"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="item-head" style="margin-bottom:8px">
+        <h2 style="font-size:12px;letter-spacing:0.08em;color:var(--text2);text-transform:uppercase">Arcos / Capítulos</h2>
+        <button class="btn sm" onclick="addArc()">+ Añadir</button>
+      </div>
+      <div id="arc-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="item-head" style="margin-bottom:8px">
+        <h2 style="font-size:12px;letter-spacing:0.08em;color:var(--text2);text-transform:uppercase">PNJs</h2>
+        <button class="btn sm" onclick="addNpc()">+ Añadir</button>
+      </div>
+      <div id="npc-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="item-head" style="margin-bottom:8px">
+        <h2 style="font-size:12px;letter-spacing:0.08em;color:var(--text2);text-transform:uppercase">Lugares</h2>
+        <button class="btn sm" onclick="addLoc()">+ Añadir</button>
+      </div>
+      <div id="loc-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="item-head" style="margin-bottom:8px">
+        <h2 style="font-size:12px;letter-spacing:0.08em;color:var(--text2);text-transform:uppercase">Ganchos / Misiones</h2>
+        <button class="btn sm" onclick="addHook()">+ Añadir</button>
+      </div>
+      <div id="hook-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="item-head" style="margin-bottom:8px">
+        <h2 style="font-size:12px;letter-spacing:0.08em;color:var(--text2);text-transform:uppercase">Bitácora de sesiones</h2>
+        <button class="btn sm" onclick="addSession()">+ Añadir</button>
+      </div>
+      <div id="sess-list"></div>
+    </div>
+
+    <button class="btn gold full" onclick="saveStory()">💾 Guardar historia</button>
+  </div>
+
+  <!-- BESTIARIO -->
+  <div class="tab-panel" id="tab-bestiario">
+    <div class="card">
+      <div class="item-head">
+        <h2 style="font-size:12px;letter-spacing:0.08em;color:var(--text2);text-transform:uppercase">Bestiario personalizado del DM</h2>
+        <button class="btn sm gold" onclick="openMonsterForm()">+ Nuevo monstruo</button>
+      </div>
+      <div class="sub" style="margin:6px 0 0">Se guarda por DM y aparece automáticamente en el Bestiario del panel de DM.</div>
+    </div>
+
+    <div id="monster-form-wrap"></div>
+
+    <div id="custom-beast-list"></div>
+
+    <div class="cart" id="cart">
+      <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);margin-bottom:6px" id="cart-text"></div>
+      <div class="row">
+        <button class="btn sm" onclick="clearCart()">Vaciar</button>
+        <button class="btn sm gold" onclick="sendCartToPanel()" style="flex:2">⚔ Enviar al panel de DM</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── ESQUEMA COMPARTIDO CON EL PANEL DE DM (mismo localStorage / mismo origen) ──
+const DM_KEY='dm-panel-dms';
+function getCampaignKey(dmId,campId){return`dm-${dmId}-camp-${campId}`;}
+function customBeastKey(dmId){return`dm-${dmId}-custom-bestiary`;}
+const TYPE_LABELS={humanoid:'Humanoide',bestia:'Bestia',muerto:'Muerto viviente',demonio:'Demonio',dragon:'Dragón',gigante:'Gigante',monstruo:'Monstruo',celestial:'Celestial',elemental:'Elemental',planta:'Planta',constructo:'Constructo'};
+
+let currentDM=null, currentCampaign=null;
+let storyState=emptyStory();
+let cart=[]; // [{beastId,name,qty}]
+let editingMonsterId=null;
+
+function emptyStory(){return{synopsis:'',arcs:[],npcs:[],locations:[],hooks:[],sessionLog:[]};}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+
+function getAllDMs(){try{return JSON.parse(localStorage.getItem(DM_KEY)||'[]');}catch{return[];}}
+function saveDMs(dms){localStorage.setItem(DM_KEY,JSON.stringify(dms));}
+function getDMCampaigns(dmId){
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(`dm-${dmId}-camp-`))keys.push(k);}
+  return keys.map(k=>{try{const d=JSON.parse(localStorage.getItem(k));return{key:k,id:k.replace(`dm-${dmId}-camp-`,''),...d};}catch{return null;}}).filter(Boolean)
+    .sort((a,b)=>new Date(b.savedAt||0)-new Date(a.savedAt||0));
+}
+function loadCampaignRaw(dmId,campId){try{return JSON.parse(localStorage.getItem(getCampaignKey(dmId,campId))||'null');}catch{return null;}}
+function getCustomBestiary(dmId){try{return JSON.parse(localStorage.getItem(customBeastKey(dmId))||'[]');}catch{return[];}}
+function saveCustomBestiary(dmId,list){localStorage.setItem(customBeastKey(dmId),JSON.stringify(list));}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800);}
+
+// ── GATE: selección de DM / campaña ──────────────────────────
+function initGate(){
+  const params=new URLSearchParams(location.search);
+  const qDm=params.get('dm'),qCamp=params.get('camp');
+  if(qDm&&qCamp&&loadCampaignRaw(qDm,qCamp)){
+    const dms=getAllDMs();
+    currentDM=dms.find(d=>d.id===qDm)||{id:qDm,name:'DM'};
+    selectCampaign(qCamp);
+    return;
+  }
+  renderDMList();
+}
+function renderDMList(){
+  const el=document.getElementById('dm-list');
+  const dms=getAllDMs();
+  if(!dms.length){el.innerHTML='<div class="empty">Aún no hay DMs — crea uno abajo (o créalo primero en el panel de DM).</div>';return;}
+  el.innerHTML=dms.map(dm=>`<div class="dm-item" onclick="selectDM('${dm.id}')">
+    <div class="dm-avatar">${(dm.name||'?').slice(0,2).toUpperCase()}</div>
+    <div>${dm.name}</div>
+  </div>`).join('');
+}
+function createDMHere(){
+  const name=document.getElementById('new-dm-name').value.trim();
+  if(!name){showToast('Escribe un nombre');return;}
+  const dms=getAllDMs();
+  const dm={id:'dm-'+uid(),name};
+  dms.push(dm);saveDMs(dms);
+  document.getElementById('new-dm-name').value='';
+  selectDM(dm.id);
+}
+function selectDM(dmId){
+  const dms=getAllDMs();
+  currentDM=dms.find(d=>d.id===dmId)||{id:dmId,name:'DM'};
+  document.getElementById('gate-dm-name').textContent=currentDM.name;
+  document.getElementById('gate-dm-step').style.display='none';
+  document.getElementById('gate-camp-step').style.display='block';
+  renderCampList();
+}
+function backToDMStep(){
+  document.getElementById('gate-dm-step').style.display='block';
+  document.getElementById('gate-camp-step').style.display='none';
+  renderDMList();
+}
+function renderCampList(){
+  const el=document.getElementById('camp-list');
+  const camps=getDMCampaigns(currentDM.id);
+  if(!camps.length){el.innerHTML='<div class="empty">Sin campañas — crea una abajo (o desde el panel de DM).</div>';return;}
+  el.innerHTML=camps.map(c=>`<div class="dm-item" onclick="selectCampaign('${c.id}')">
+    <div class="dm-avatar">${c.icon||'⚔️'}</div>
+    <div><div>${c.name}</div><div class="item-meta">${(c.players||[]).length} jugadores</div></div>
+  </div>`).join('');
+}
+function createCampaignHere(){
+  const name=document.getElementById('new-camp-name').value.trim();
+  if(!name){showToast('Escribe un nombre');return;}
+  const id='camp-'+Date.now();
+  const emptyState={id,name,icon:'⚔️',createdAt:new Date().toISOString(),version:2,savedAt:new Date().toISOString(),round:1,curTurn:0,combatants:[],players:[],logEntries:[],rollHist:[],damageDealt:{},combatActive:false,notes:'',story:emptyStory(),pendingEncounter:[]};
+  localStorage.setItem(getCampaignKey(currentDM.id,id),JSON.stringify(emptyState));
+  document.getElementById('new-camp-name').value='';
+  selectCampaign(id);
+}
+function selectCampaign(campId){
+  const data=loadCampaignRaw(currentDM.id,campId);
+  if(!data){showToast('No se encontró la campaña');return;}
+  currentCampaign={id:campId,name:data.name||'Campaña',icon:data.icon||'⚔️'};
+  storyState={...emptyStory(),...(data.story||{})};
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app-main').style.display='block';
+  document.getElementById('btn-switch').style.display='inline-block';
+  document.getElementById('top-ctx').textContent=`👤 ${currentDM.name} · 📜 ${currentCampaign.name}`;
+  document.getElementById('camp-title').textContent=`${currentCampaign.icon} ${currentCampaign.name}`;
+  renderStory();
+  renderCustomBeasts();
+}
+function goToGate(){
+  document.getElementById('app-main').style.display='none';
+  document.getElementById('btn-switch').style.display='none';
+  document.getElementById('gate').style.display='block';
+  document.getElementById('top-ctx').textContent='';
+  backToDMStep();
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── HISTORIA: guardado (read-modify-write, no toca combate/jugadores) ──
+function saveStory(){
+  if(!currentDM||!currentCampaign)return;
+  storyState.synopsis=document.getElementById('story-synopsis').value;
+  const data=loadCampaignRaw(currentDM.id,currentCampaign.id)||{};
+  data.story=storyState;
+  data.name=data.name||currentCampaign.name;
+  localStorage.setItem(getCampaignKey(currentDM.id,currentCampaign.id),JSON.stringify(data));
+  showToast('📖 Historia guardada');
+}
+function renderStory(){
+  document.getElementById('story-synopsis').value=storyState.synopsis||'';
+  renderArcs();renderNpcs();renderLocs();renderHooks();renderSessions();
+}
+function statusPill(s){const map={planeado:['plan','Planeado'],en_curso:['curso','En curso'],completado:['done','Completado']};const[c,l]=map[s]||map.planeado;return`<span class="pill ${c}">${l}</span>`;}
+function cycleStatus(s){return s==='planeado'?'en_curso':s==='en_curso'?'completado':'planeado';}
+
+function addArc(){storyState.arcs.push({id:uid(),title:'Nuevo arco',summary:'',status:'planeado'});renderArcs();}
+function renderArcs(){
+  const el=document.getElementById('arc-list');
+  if(!storyState.arcs.length){el.innerHTML='<div class="empty">Sin arcos todavía</div>';return;}
+  el.innerHTML=storyState.arcs.map(a=>`<div class="item">
+    <input type="text" value="${esc(a.title)}" oninput="updArc('${a.id}','title',this.value)" style="font-weight:600;margin-bottom:6px"/>
+    <textarea oninput="updArc('${a.id}','summary',this.value)" placeholder="Resumen del arco…" style="min-height:50px">${esc(a.summary)}</textarea>
+    <div class="item-head" style="margin-top:6px">
+      <span onclick="updArc('${a.id}','status',cycleStatus('${a.status}'))" style="cursor:pointer">${statusPill(a.status)}</span>
+      <button class="iconbtn" onclick="delArc('${a.id}')">✕</button>
+    </div>
+  </div>`).join('');
+}
+function updArc(id,field,val){const a=storyState.arcs.find(x=>x.id===id);if(a){a[field]=val;if(field==='status')renderArcs();}}
+function delArc(id){storyState.arcs=storyState.arcs.filter(x=>x.id!==id);renderArcs();}
+
+function addNpc(){storyState.npcs.push({id:uid(),name:'Nuevo PNJ',role:'',desc:'',secret:''});renderNpcs();}
+function renderNpcs(){
+  const el=document.getElementById('npc-list');
+  if(!storyState.npcs.length){el.innerHTML='<div class="empty">Sin PNJs todavía</div>';return;}
+  el.innerHTML=storyState.npcs.map(n=>`<div class="item">
+    <div class="row">
+      <input type="text" value="${esc(n.name)}" oninput="updNpc('${n.id}','name',this.value)" placeholder="Nombre" style="font-weight:600"/>
+      <input type="text" value="${esc(n.role)}" oninput="updNpc('${n.id}','role',this.value)" placeholder="Rol / relación"/>
+    </div>
+    <textarea oninput="updNpc('${n.id}','desc',this.value)" placeholder="Descripción, personalidad…" style="min-height:44px;margin-top:6px">${esc(n.desc)}</textarea>
+    <textarea oninput="updNpc('${n.id}','secret',this.value)" placeholder="Secreto (solo DM)…" style="min-height:38px;margin-top:6px;border-color:var(--red2);color:var(--rbr)">${esc(n.secret)}</textarea>
+    <div style="text-align:right;margin-top:6px"><button class="iconbtn" onclick="delNpc('${n.id}')">✕</button></div>
+  </div>`).join('');
+}
+function updNpc(id,field,val){const n=storyState.npcs.find(x=>x.id===id);if(n)n[field]=val;}
+function delNpc(id){storyState.npcs=storyState.npcs.filter(x=>x.id!==id);renderNpcs();}
+
+function addLoc(){storyState.locations.push({id:uid(),name:'Nuevo lugar',desc:''});renderLocs();}
+function renderLocs(){
+  const el=document.getElementById('loc-list');
+  if(!storyState.locations.length){el.innerHTML='<div class="empty">Sin lugares todavía</div>';return;}
+  el.innerHTML=storyState.locations.map(l=>`<div class="item">
+    <input type="text" value="${esc(l.name)}" oninput="updLoc('${l.id}','name',this.value)" style="font-weight:600;margin-bottom:6px"/>
+    <textarea oninput="updLoc('${l.id}','desc',this.value)" placeholder="Descripción…" style="min-height:44px">${esc(l.desc)}</textarea>
+    <div style="text-align:right;margin-top:6px"><button class="iconbtn" onclick="delLoc('${l.id}')">✕</button></div>
+  </div>`).join('');
+}
+function updLoc(id,field,val){const l=storyState.locations.find(x=>x.id===id);if(l)l[field]=val;}
+function delLoc(id){storyState.locations=storyState.locations.filter(x=>x.id!==id);renderLocs();}
+
+function addHook(){storyState.hooks.push({id:uid(),title:'Nuevo gancho',desc:'',status:'planeado'});renderHooks();}
+function renderHooks(){
+  const el=document.getElementById('hook-list');
+  if(!storyState.hooks.length){el.innerHTML='<div class="empty">Sin ganchos todavía</div>';return;}
+  el.innerHTML=storyState.hooks.map(h=>`<div class="item">
+    <input type="text" value="${esc(h.title)}" oninput="updHook('${h.id}','title',this.value)" style="font-weight:600;margin-bottom:6px"/>
+    <textarea oninput="updHook('${h.id}','desc',this.value)" placeholder="De qué se trata, recompensa…" style="min-height:44px">${esc(h.desc)}</textarea>
+    <div class="item-head" style="margin-top:6px">
+      <span onclick="updHook('${h.id}','status',cycleStatus('${h.status}'))" style="cursor:pointer">${statusPill(h.status)}</span>
+      <button class="iconbtn" onclick="delHook('${h.id}')">✕</button>
+    </div>
+  </div>`).join('');
+}
+function updHook(id,field,val){const h=storyState.hooks.find(x=>x.id===id);if(h){h[field]=val;if(field==='status')renderHooks();}}
+function delHook(id){storyState.hooks=storyState.hooks.filter(x=>x.id!==id);renderHooks();}
+
+function addSession(){storyState.sessionLog.unshift({id:uid(),date:new Date().toISOString().slice(0,10),summary:''});renderSessions();}
+function renderSessions(){
+  const el=document.getElementById('sess-list');
+  if(!storyState.sessionLog.length){el.innerHTML='<div class="empty">Sin sesiones registradas</div>';return;}
+  el.innerHTML=storyState.sessionLog.map(s=>`<div class="item">
+    <input type="date" value="${esc(s.date)}" oninput="updSess('${s.id}','date',this.value)" style="max-width:160px;margin-bottom:6px"/>
+    <textarea oninput="updSess('${s.id}','summary',this.value)" placeholder="Qué pasó en esta sesión…" style="min-height:44px">${esc(s.summary)}</textarea>
+    <div style="text-align:right;margin-top:6px"><button class="iconbtn" onclick="delSess('${s.id}')">✕</button></div>
+  </div>`).join('');
+}
+function updSess(id,field,val){const s=storyState.sessionLog.find(x=>x.id===id);if(s)s[field]=val;}
+function delSess(id){storyState.sessionLog=storyState.sessionLog.filter(x=>x.id!==id);renderSessions();}
+
+function esc(s){return(s||'').toString().replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+// ── BESTIARIO PERSONALIZADO ──────────────────────────────────
+function emptyMonster(){return{id:'m-'+uid(),name:'',icon:'👹',cr:'1',type:'monstruo',hp:10,ca:12,spd:9,str:0,dex:0,con:0,int:0,wis:0,cha:0,traits:'',imm:'',desc:'',actions:[{name:'Ataque',atk:3,dd:'1d6',dm:1,dt:'contundente',special:'',range:false}],custom:true,createdAt:new Date().toISOString()};}
+let monsterDraft=null;
+
+function openMonsterForm(id){
+  monsterDraft=id?JSON.parse(JSON.stringify(getCustomBestiary(currentDM.id).find(m=>m.id===id))):emptyMonster();
+  editingMonsterId=id||null;
+  renderMonsterForm();
+  document.getElementById('monster-form-wrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function closeMonsterForm(){monsterDraft=null;editingMonsterId=null;document.getElementById('monster-form-wrap').innerHTML='';}
+function renderMonsterForm(){
+  const m=monsterDraft;
+  const typeOpts=Object.entries(TYPE_LABELS).map(([k,v])=>`<option value="${k}" ${m.type===k?'selected':''}>${v}</option>`).join('');
+  document.getElementById('monster-form-wrap').innerHTML=`<div class="card">
+    <h2 style="font-size:12px;letter-spacing:0.08em;color:var(--gold);text-transform:uppercase;margin-bottom:4px">${editingMonsterId?'Editar':'Nuevo'} monstruo</h2>
+    <div class="row">
+      <div style="flex:0 0 70px"><span class="lbl">Icono</span><input type="text" id="mf-icon" value="${esc(m.icon)}" maxlength="4"/></div>
+      <div style="flex:3"><span class="lbl">Nombre</span><input type="text" id="mf-name" value="${esc(m.name)}" placeholder="Nombre de la criatura"/></div>
+    </div>
+    <div class="row">
+      <div><span class="lbl">Tipo</span><select id="mf-type">${typeOpts}</select></div>
+      <div><span class="lbl">CR</span><input type="text" id="mf-cr" value="${esc(m.cr)}" placeholder="1, 1/4, 1/2…"/></div>
+    </div>
+    <div class="row">
+      <div><span class="lbl">HP</span><input type="number" id="mf-hp" value="${m.hp}"/></div>
+      <div><span class="lbl">CA</span><input type="number" id="mf-ca" value="${m.ca}"/></div>
+      <div><span class="lbl">Vel (m)</span><input type="number" id="mf-spd" value="${m.spd}"/></div>
+    </div>
+    <span class="lbl">Modificadores de característica</span>
+    <div class="row">
+      ${['str','dex','con','int','wis','cha'].map(s=>`<div><span class="lbl" style="margin-top:0">${s.toUpperCase()}</span><input type="number" id="mf-${s}" value="${m[s]}"/></div>`).join('')}
+    </div>
+    <span class="lbl">Rasgos especiales</span>
+    <textarea id="mf-traits" placeholder="Ej: Resistente a daño no mágico…">${esc(m.traits)}</textarea>
+    <span class="lbl">Inmunidades</span>
+    <input type="text" id="mf-imm" value="${esc(m.imm)}" placeholder="Veneno, fuego…"/>
+    <span class="lbl">Descripción</span>
+    <textarea id="mf-desc" placeholder="Lore, comportamiento…">${esc(m.desc)}</textarea>
+
+    <div class="item-head" style="margin-top:12px">
+      <span class="lbl" style="margin:0">Acciones / ataques</span>
+      <button class="btn sm" onclick="addDraftAction()">+ Añadir</button>
+    </div>
+    <div id="mf-actions">${m.actions.map((a,i)=>renderActionRow(a,i)).join('')}</div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn" onclick="closeMonsterForm()">Cancelar</button>
+      <button class="btn gold" onclick="saveMonsterDraft()" style="flex:2">💾 Guardar en el bestiario</button>
+    </div>
+  </div>`;
+}
+function renderActionRow(a,i){
+  return`<div class="actblk">
+    <div class="actblk-head">
+      <input type="text" value="${esc(a.name)}" oninput="updDraftAction(${i},'name',this.value)" placeholder="Nombre del ataque" style="font-weight:600"/>
+      <button class="iconbtn" onclick="delDraftAction(${i})">✕</button>
+    </div>
+    <div class="row">
+      <div><span class="lbl" style="margin-top:0">Bono atq</span><input type="number" value="${a.atk}" oninput="updDraftAction(${i},'atk',this.value)"/></div>
+      <div><span class="lbl" style="margin-top:0">Dados</span><input type="text" value="${esc(a.dd)}" oninput="updDraftAction(${i},'dd',this.value)" placeholder="2d6"/></div>
+      <div><span class="lbl" style="margin-top:0">Bono daño</span><input type="number" value="${a.dm}" oninput="updDraftAction(${i},'dm',this.value)"/></div>
+    </div>
+    <div class="row">
+      <div style="flex:2"><span class="lbl" style="margin-top:0">Tipo de daño</span><input type="text" value="${esc(a.dt)}" oninput="updDraftAction(${i},'dt',this.value)" placeholder="cortante, fuego…"/></div>
+      <div class="chk-row" style="flex:1;align-items:center;margin-top:16px">
+        <input type="checkbox" id="mf-range-${i}" ${a.range?'checked':''} onchange="updDraftAction(${i},'range',this.checked)"/>
+        <label for="mf-range-${i}">A distancia</label>
+      </div>
+    </div>
+    <span class="lbl">Efecto especial</span>
+    <input type="text" value="${esc(a.special)}" oninput="updDraftAction(${i},'special',this.value)" placeholder="Ej: DC14 CON o envenenado"/>
+  </div>`;
+}
+function addDraftAction(){monsterDraft.actions.push({name:'Ataque',atk:3,dd:'1d6',dm:1,dt:'contundente',special:'',range:false});renderMonsterForm();}
+function delDraftAction(i){monsterDraft.actions.splice(i,1);renderMonsterForm();}
+function updDraftAction(i,field,val){
+  const a=monsterDraft.actions[i];if(!a)return;
+  a[field]=(field==='atk'||field==='dm')?(parseInt(val)||0):(field==='range'?val:val);
+}
+function saveMonsterDraft(){
+  const m=monsterDraft;
+  m.icon=document.getElementById('mf-icon').value||'👹';
+  m.name=document.getElementById('mf-name').value.trim();
+  if(!m.name){showToast('Ponle un nombre al monstruo');return;}
+  m.type=document.getElementById('mf-type').value;
+  m.cr=document.getElementById('mf-cr').value||'1';
+  m.hp=parseInt(document.getElementById('mf-hp').value)||1;
+  m.ca=parseInt(document.getElementById('mf-ca').value)||10;
+  m.spd=parseInt(document.getElementById('mf-spd').value)||9;
+  ['str','dex','con','int','wis','cha'].forEach(s=>m[s]=parseInt(document.getElementById('mf-'+s).value)||0);
+  m.traits=document.getElementById('mf-traits').value;
+  m.imm=document.getElementById('mf-imm').value;
+  m.desc=document.getElementById('mf-desc').value;
+  const list=getCustomBestiary(currentDM.id);
+  const idx=list.findIndex(x=>x.id===m.id);
+  if(idx>=0)list[idx]=m;else list.push(m);
+  saveCustomBestiary(currentDM.id,list);
+  closeMonsterForm();
+  renderCustomBeasts();
+  showToast('🐉 Monstruo guardado — ya está disponible en el panel de DM');
+}
+function deleteMonster(id){
+  if(!confirm('¿Eliminar este monstruo del bestiario?'))return;
+  saveCustomBestiary(currentDM.id,getCustomBestiary(currentDM.id).filter(m=>m.id!==id));
+  cart=cart.filter(c=>c.beastId!==id);
+  renderCustomBeasts();renderCart();
+}
+let expandedBeast=null;
+function toggleBeastCard(id){expandedBeast=expandedBeast===id?null:id;renderCustomBeasts();}
+function renderCustomBeasts(){
+  const el=document.getElementById('custom-beast-list');
+  const list=currentDM?getCustomBestiary(currentDM.id):[];
+  if(!list.length){el.innerHTML='<div class="empty">Aún no creaste monstruos — usa "+ Nuevo monstruo" arriba.</div>';return;}
+  el.innerHTML=list.map(b=>{
+    const isOpen=expandedBeast===b.id;
+    return`<div class="bcard">
+    <div class="bcard-top" onclick="toggleBeastCard('${b.id}')">
+      <span class="bicon">${b.icon}</span><span class="bname">${esc(b.name)}</span>
+      <span class="item-meta">${TYPE_LABELS[b.type]||b.type}</span><span class="bcr">CR ${b.cr}</span>
+    </div>
+    ${isOpen?`<div class="bbody">
+      ${b.desc?`<div class="bdesc">${esc(b.desc)}</div>`:''}
+      ${b.traits?`<div class="btraits">⚡ ${esc(b.traits)}</div>`:''}
+      ${b.imm?`<div class="bimm">🛡 Inmune: ${esc(b.imm)}</div>`:''}
+      <div class="bstats">
+        <div class="bst"><div class="bst-l">HP</div><div class="bst-v">${b.hp}</div></div>
+        <div class="bst"><div class="bst-l">CA</div><div class="bst-v">${b.ca}</div></div>
+        <div class="bst"><div class="bst-l">VEL</div><div class="bst-v">${b.spd}m</div></div>
+      </div>
+      <div>${b.actions.map(a=>`<div class="bact"><strong>${esc(a.name)}${a.range?' 🏹':''}</strong>${a.atk?` Ataque +${a.atk} | ${esc(a.dd)}${a.dm>0?'+'+a.dm:''} ${esc(a.dt)}`:''}${a.special?`<br><em style="color:var(--amber)">⚠ ${esc(a.special)}</em>`:''}</div>`).join('')}</div>
+      <div class="qty-row">
+        <span style="font-size:11px;color:var(--text3)">Cantidad:</span>
+        <input type="number" class="qty-inp" id="qty-${b.id}" value="1" min="1" max="10" onclick="event.stopPropagation()"/>
+        <button class="btn sm gold" onclick="event.stopPropagation();addToCart('${b.id}')" style="flex:1">🎒 Preparar para batalla</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn sm" onclick="event.stopPropagation();openMonsterForm('${b.id}')">✎ Editar</button>
+        <button class="btn sm red" onclick="event.stopPropagation();deleteMonster('${b.id}')">🗑 Eliminar</button>
+      </div>
+    </div>`:''}
+  </div>`;
+  }).join('');
+}
+
+// ── ENCUENTRO: staging local → se envía al panel de DM ────────
+function addToCart(beastId){
+  const list=getCustomBestiary(currentDM.id);
+  const b=list.find(x=>x.id===beastId);if(!b)return;
+  const qty=Math.max(1,parseInt(document.getElementById('qty-'+beastId)?.value)||1);
+  const existing=cart.find(c=>c.beastId===beastId);
+  if(existing)existing.qty+=qty;else cart.push({beastId,name:b.name,qty});
+  renderCart();
+  showToast(`${b.name} añadido al encuentro`);
+}
+function clearCart(){cart=[];renderCart();}
+function renderCart(){
+  const el=document.getElementById('cart');
+  if(!cart.length){el.classList.remove('show');return;}
+  el.classList.add('show');
+  const total=cart.reduce((s,c)=>s+c.qty,0);
+  document.getElementById('cart-text').textContent=`🎒 Encuentro preparado: ${total} criatura${total!==1?'s':''} — ${cart.map(c=>`${c.qty}× ${c.name}`).join(', ')}`;
+}
+function sendCartToPanel(){
+  if(!cart.length||!currentDM||!currentCampaign)return;
+  const data=loadCampaignRaw(currentDM.id,currentCampaign.id)||{};
+  const pending=Array.isArray(data.pendingEncounter)?data.pendingEncounter:[];
+  cart.forEach(c=>{
+    const ex=pending.find(p=>p.beastId===c.beastId);
+    if(ex)ex.qty+=c.qty;else pending.push({...c});
+  });
+  data.pendingEncounter=pending;
+  data.name=data.name||currentCampaign.name;
+  localStorage.setItem(getCampaignKey(currentDM.id,currentCampaign.id),JSON.stringify(data));
+  cart=[];renderCart();
+  showToast('⚔ Encuentro enviado — ábrelo en el panel de DM');
+  if(confirm('Encuentro enviado al panel de DM. ¿Abrirlo ahora?')){
+    window.open(`../index.html`,'_blank');
+  }
+}
+
+initGate();
+</script>
+</body>
+</html>
