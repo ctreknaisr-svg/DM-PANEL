@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="build-version" content="20260827141500" data-build-version="20260827151432"/>
+<meta name="build-version" content="20260827141500" data-build-version="20260827141500"/>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
@@ -412,6 +412,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   <button class="tbtn" onclick="openAddPlayer()">+ Jugador</button>
   <button class="tbtn" onclick="savePartida()">💾 Guardar</button>
   <button class="tbtn gold" onclick="openHistorias()">📜 Historias</button>
+  <button class="tbtn gold" onclick="openScreenModal()">📡 Pantalla</button>
   <button class="tbtn" onclick="exportPartida()">⬇ Exportar</button>
   <button class="tbtn" onclick="document.getElementById('import-inp').click()">⬆ Importar</button>
   <input type="file" id="import-inp" accept=".json" style="display:none" onchange="importPartida(event)"/>
@@ -494,6 +495,9 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   <div class="panel" id="panel-combat">
     <div class="ph">
       <div class="ph-title">⚔ Combate</div>
+      <label style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text3);cursor:pointer" title="Transmite el combate a la pantalla de jugadores en tiempo real">
+        <input type="checkbox" id="screen-live-toggle" onchange="onScreenLiveToggle(this.checked)"/> 📡
+      </label>
       <button class="btn sm gold" onclick="rollAllInits()">Tirar iniciativas</button>
     </div>
     <div style="padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0">
@@ -697,6 +701,18 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
   </div>
 </div>
 
+<!-- PANTALLA DE JUGADORES: modal de configuración -->
+<div class="modal hidden" id="screen-modal">
+  <div class="mbox" style="max-width:420px">
+    <h3 style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:0.08em;margin-bottom:4px">📡 Pantalla de jugadores</h3>
+    <p style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:10px">Transmite el combate en vivo a un TV, tablet o celular aparte, usando una base de datos gratuita de Firebase.</p>
+    <div id="screen-setup-area"></div>
+    <div class="mrow"><button class="mbtn" onclick="closeModal('screen-modal')">Cerrar</button></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 const BESTIARY=[
 {id:'rata',name:'Rata',icon:'🐀',cr:'0',type:'bestia',hp:1,ca:10,spd:6,str:-4,dex:0,con:-2,int:-4,wis:1,cha:-4,traits:'',imm:'',desc:'Insignificante. Ataca solo si está desesperada.',actions:[{name:'Mordisco',atk:0,dd:'1',dm:0,dt:'perforante'}]},
@@ -1172,6 +1188,129 @@ function openHistorias(){
   const dm=currentDM?.id||'',camp=currentCampaign?.id||'';
   window.open(`historias/index.html?dm=${encodeURIComponent(dm)}&camp=${encodeURIComponent(camp)}`,'_blank');
 }
+// ── PANTALLA DE JUGADORES (Firebase Realtime Database, opcional) ──────
+const FB_CFG_KEY='dm-panel-firebase-config';
+function getFBConfig(){try{return JSON.parse(localStorage.getItem(FB_CFG_KEY)||'null');}catch{return null;}}
+function saveFBConfig(cfg){localStorage.setItem(FB_CFG_KEY,JSON.stringify(cfg));}
+let fbApp=null,fbDB=null;
+function ensureFirebase(){
+  const cfg=getFBConfig();if(!cfg)return false;
+  try{
+    if(!fbApp){fbApp=firebase.initializeApp(cfg);fbDB=firebase.database();}
+    return true;
+  }catch(e){console.error('Firebase init error',e);return false;}
+}
+function ensureRoomCode(){
+  if(!currentDM||!currentCampaign)return null;
+  if(currentCampaign.screenRoom)return currentCampaign.screenRoom;
+  const code=Math.random().toString(36).slice(2,8).toUpperCase();
+  currentCampaign.screenRoom=code;
+  const key=getCampaignKey(currentDM.id,currentCampaign.id);
+  const data=JSON.parse(localStorage.getItem(key)||'{}');
+  data.screenRoom=code;
+  localStorage.setItem(key,JSON.stringify(data));
+  return code;
+}
+function screenShareUrl(){
+  const cfg=getFBConfig(),room=ensureRoomCode();
+  if(!cfg||!room)return null;
+  const b64=btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+  const base=location.href.replace(/index\.html.*$/,'');
+  return `${base}pantalla/index.html?room=${room}&cfg=${encodeURIComponent(b64)}`;
+}
+let _screenPushTimer=null;
+function pushScreen(payload){
+  if(!ensureFirebase())return;
+  const room=ensureRoomCode();if(!room)return;
+  clearTimeout(_screenPushTimer);
+  _screenPushTimer=setTimeout(()=>{
+    try{fbDB.ref('rooms/'+room).set({...payload,updatedAt:Date.now()});}catch(e){console.error('screen push error',e);}
+  },350);
+}
+function hpBand(hp,maxHp){
+  if(!maxHp||maxHp<=0)return'—';
+  if(hp<=0)return'Caído';
+  const pct=hp/maxHp;
+  if(pct>0.75)return'Ileso';
+  if(pct>0.5)return'Herido';
+  if(pct>0.25)return'Malherido';
+  return'Casi muerto';
+}
+function buildScreenCombatPayload(){
+  const exact=document.getElementById('screen-exact-hp')?.checked;
+  return{mode:'combat',combat:{round,combatants:combatants.map((c,i)=>{
+    const isPlayer=c.type==='player';
+    const show=isPlayer||exact;
+    return{name:c.name,type:c.type,ca:isPlayer?(c.ca||null):null,initiative:c.initiative,current:i===curTurn,
+      hp:show?c.hp:null,maxHp:show?c.maxHp:null,band:show?null:hpBand(c.hp,c.maxHp)};
+  })}};
+}
+function onScreenLiveToggle(checked){
+  if(!currentDM||!currentCampaign){showToast('Elige una campaña primero');const t=document.getElementById('screen-live-toggle');if(t)t.checked=false;return;}
+  currentCampaign.screenLive=checked;
+  const key=getCampaignKey(currentDM.id,currentCampaign.id);
+  const data=JSON.parse(localStorage.getItem(key)||'{}');
+  data.screenLive=checked;
+  localStorage.setItem(key,JSON.stringify(data));
+  if(checked){
+    if(!getFBConfig()){showToast('Primero configura la pantalla de jugadores (📡 arriba)');openScreenModal();const t=document.getElementById('screen-live-toggle');if(t)t.checked=false;currentCampaign.screenLive=false;return;}
+    pushScreen(buildScreenCombatPayload());
+    showToast('📡 Transmitiendo combate en vivo');
+  }
+}
+function maybeBroadcastCombat(){
+  if(!currentCampaign?.screenLive)return;
+  pushScreen(buildScreenCombatPayload());
+}
+function openScreenModal(){
+  document.getElementById('screen-modal').classList.remove('hidden');
+  renderScreenSetup();
+}
+function renderScreenSetup(){
+  const el=document.getElementById('screen-setup-area');
+  const cfg=getFBConfig();
+  if(!cfg){
+    el.innerHTML=`
+      <p style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px">
+        1. Entra a <strong>console.firebase.google.com</strong> → crea un proyecto gratis.<br>
+        2. En el menú, abre <strong>Realtime Database</strong> → "Crear base de datos" → modo de prueba.<br>
+        3. En ⚙ Configuración del proyecto → tus apps → "Agregar app" (ícono &lt;/&gt; Web) → copia el objeto <code>firebaseConfig</code>.<br>
+        4. Pégalo acá abajo tal cual (con las llaves { }):
+      </p>
+      <textarea id="fb-cfg-input" placeholder='{"apiKey":"...","databaseURL":"...","projectId":"..."}' style="min-height:100px;width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:8px;font-family:monospace;font-size:11px"></textarea>
+      <div class="mrow" style="margin-top:8px"><button class="mbtn gold" onclick="submitFBConfig()">Guardar</button></div>
+    `;
+    return;
+  }
+  const url=screenShareUrl();
+  el.innerHTML=`
+    <p style="font-size:11px;color:var(--gbr);margin-bottom:10px">✅ Conectado a Firebase.</p>
+    <div class="lbl">Link para la pantalla de jugadores</div>
+    <textarea readonly style="min-height:70px;width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:8px;font-family:monospace;font-size:10px" onclick="this.select()">${url||''}</textarea>
+    <p style="font-size:10px;color:var(--text3);margin:6px 0 10px">Abrí ese link en el TV, tablet o celular de tus jugadores. Código de sala: <strong style="color:var(--gold)">${currentCampaign?ensureRoomCode():'—'}</strong></p>
+    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);margin-bottom:10px">
+      <input type="checkbox" id="screen-exact-hp"/> Mostrar HP exacto de los monstruos (si no, se muestra un estado: Herido, Malherido…)
+    </label>
+    <div class="mrow"><button class="mbtn" onclick="forgetFBConfig()">Olvidar configuración</button></div>
+  `;
+}
+function submitFBConfig(){
+  const raw=document.getElementById('fb-cfg-input').value.trim();
+  if(!raw){showToast('Pega la configuración de Firebase');return;}
+  try{
+    const cfg=JSON.parse(raw);
+    if(!cfg.databaseURL){showToast('Falta databaseURL — revisa que copiaste bien el objeto');return;}
+    saveFBConfig(cfg);
+    fbApp=null;fbDB=null;
+    showToast('✅ Pantalla de jugadores configurada');
+    renderScreenSetup();
+  }catch(e){showToast('Ese texto no es JSON válido — copia el objeto completo');}
+}
+function forgetFBConfig(){
+  if(!confirm('¿Olvidar la configuración de Firebase en este dispositivo?'))return;
+  localStorage.removeItem(FB_CFG_KEY);fbApp=null;fbDB=null;renderScreenSetup();
+}
+
 // ENCUENTRO PREPARADO (armado en la plataforma de Historias, se carga acá)
 function checkPendingEncounter(){
   const pe=currentCampaign?.pendingEncounter;
@@ -1579,7 +1718,7 @@ function showBanner(msg){const b=document.createElement('div');b.style.cssText='
 function rollAllInits(){combatActive=true;combatants.forEach(c=>{const m=c.dexMod||0;const r=Math.floor(Math.random()*20)+1;c.initiative=r+m;c._r=r;});combatants.sort((a,b)=>b.initiative-a.initiative);curTurn=0;addLog('system','Iniciativas: '+combatants.map(c=>`${c.name}(${c._r}${(c.dexMod||0)>=0?'+':''}${c.dexMod||0}=${c.initiative})`).join(', '));renderInitList();renderCombatList();renderQC();}
 function nextTurn(){curTurn=(curTurn+1)%combatants.length;if(curTurn===0){round++;document.getElementById('rnum').textContent=round;document.getElementById('qc-rnd').textContent='Ronda '+round;addLog('system',`<strong>Ronda ${round}</strong>`);}addLog('system',`Turno de <strong>${combatants[curTurn]?.name}</strong>`);renderInitList();renderCombatList();renderPlayersList();renderQC();}
 function jumpTo(i){curTurn=i;renderInitList();renderCombatList();renderPlayersList();renderQC();}
-function renderInitList(){const el=document.getElementById('init-list');if(!combatants.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Sin combatientes</div>';return;}el.innerHTML=combatants.map((c,i)=>{const pct=c.maxHp>0?c.hp/c.maxHp:0;return`<div class="irow ${i===curTurn?'cur':''}" onclick="jumpTo(${i})">${i===curTurn?'<span class="tarrow">▶</span>':'<span style="width:13px;display:inline-block"></span>'}<span class="inum">${c.initiative!==null?c.initiative:'—'}</span><span class="iname">${c.name} <span style="color:var(--text3);font-size:8px">CA${c.ca||10}</span></span><span class="ihp ${pct<0.3?'low':''}">${c.hp}/${c.maxHp}</span></div>`;}).join('');}
+function renderInitList(){const el=document.getElementById('init-list');if(!combatants.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Sin combatientes</div>';maybeBroadcastCombat();return;}el.innerHTML=combatants.map((c,i)=>{const pct=c.maxHp>0?c.hp/c.maxHp:0;return`<div class="irow ${i===curTurn?'cur':''}" onclick="jumpTo(${i})">${i===curTurn?'<span class="tarrow">▶</span>':'<span style="width:13px;display:inline-block"></span>'}<span class="inum">${c.initiative!==null?c.initiative:'—'}</span><span class="iname">${c.name} <span style="color:var(--text3);font-size:8px">CA${c.ca||10}</span></span><span class="ihp ${pct<0.3?'low':''}">${c.hp}/${c.maxHp}</span></div>`;}).join('');maybeBroadcastCombat();}
 function renderCombatList(){const el=document.getElementById('combat-list');const aid=combatants[curTurn]?.id;el.innerHTML=combatants.map((c,i)=>{const pct=c.maxHp>0?c.hp/c.maxHp:0,bc=pct<0.3?'low':pct<0.6?'mid':'';const ini=c.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();const isM=c.type==='monster';return`<div class="pcard ${c.id===aid?'cur-turn':''} ${c.hp<=0?'dead':''}"><div class="pcard-top"><div class="pava ${isM?'monster':''}">${isM?'☠':ini}</div><span class="pcard-name" style="font-size:13px">${c.name}</span><span class="pcard-class">${isM?'Monstruo':'Jugador'}</span>${isM&&c.beastId?`<button class="btn sm" onclick="setActiveMonster('${c.beastId}','${c.name}')" style="font-size:9px;flex-shrink:0">Ficha</button>`:''}<button class="btn sm" onclick="openHpModalC(${i})" style="font-size:9px;flex-shrink:0">HP⚙</button></div><div style="display:flex;gap:5px;margin-bottom:6px"><div class="qs"><div class="qs-lbl">CA</div><div class="qs-val">${c.ca||10}</div></div><div class="qs"><div class="qs-lbl">Init</div><div class="qs-val">${c.initiative!==null?c.initiative:'—'}</div></div></div><div class="conds">${CONDS.slice(0,5).map(cd=>`<span class="cond ${(c.conditions||[]).includes(cd)?'on':''}" onclick="togCombatCond(${i},'${cd}')">${cd}</span>`).join('')}</div><div class="hpctrl"><button class="hpb" onclick="chgCombatHp(${i},-1)">−</button><button class="hpb" onclick="chgCombatHp(${i},+1)">+</button><button class="hpb hp5" onclick="chgCombatHp(${i},-5)">-5</button></div><div class="hpbar-wrap"><div class="hpbar-fill ${bc}" style="width:${Math.max(0,Math.round(pct*100))}%"></div></div><div style="font-family:'Cinzel',serif;font-size:12px;color:var(--text2);margin-top:3px;text-align:right">${c.hp}/${c.maxHp}</div></div>`;}).join('');}
 function chgCombatHp(i,d){const c=combatants[i],prev=c.hp;c.hp=Math.max(0,Math.min(c.maxHp,c.hp+d));const pi=players.findIndex(p=>p.id===c.id);if(pi!==-1)players[pi].hp=c.hp;if(activeMonster&&activeMonster.combatantId===c.id){activeMonster.currentHp=c.hp;renderActiveMonster();}if(c.hp!==prev)addLog('combat',d<0?`<strong>${c.name}</strong> recibe <span class="ht">${Math.abs(d)} daño</span> → ${c.hp}/${c.maxHp}HP${c.hp===0?' <span class="pt">— CAÍDO</span>':''}`:`<strong>${c.name}</strong> <span class="hl">+${Math.abs(d)}HP</span>`);renderCombatList();renderInitList();renderPlayersList();renderQC();if(c.type==='monster'&&c.hp===0)checkVictory();}
 function togCombatCond(i,cond){const c=combatants[i];if(!c.conditions)c.conditions=[];const x=c.conditions.indexOf(cond);x===-1?c.conditions.push(cond):c.conditions.splice(x,1);const pi=players.findIndex(p=>p.id===c.id);if(pi!==-1)players[pi].conditions=c.conditions;renderCombatList();renderQC();}
@@ -1949,12 +2088,14 @@ function loadCampaign(campId){
   }
   try{
     const data=JSON.parse(raw);
-    // story y pendingEncounter los escribe la plataforma de Historias (mismo origin/localStorage);
-    // se guardan acá para que el autosave de abajo no los pise.
-    currentCampaign={id:campId,name:data.name||'Campaña',icon:data.icon||'⚔️',story:data.story,pendingEncounter:data.pendingEncounter};
+    // story, pendingEncounter, screenRoom y screenLive los puede escribir la plataforma de Historias
+    // o quedar seteados de una sesión anterior (mismo origin/localStorage); se guardan acá para
+    // que el autosave de abajo no los pise.
+    currentCampaign={id:campId,name:data.name||'Campaña',icon:data.icon||'⚔️',story:data.story,pendingEncounter:data.pendingEncounter,screenRoom:data.screenRoom,screenLive:data.screenLive};
     applyState(data);
     enterPanel();
     checkPendingEncounter();
+    const slt=document.getElementById('screen-live-toggle');if(slt)slt.checked=!!currentCampaign.screenLive;
   }catch(e){
     console.error('loadCampaign error:',e);
     currentCampaign={id:campId,name:'Campaña',icon:'⚔️'};
